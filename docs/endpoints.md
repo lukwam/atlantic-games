@@ -134,9 +134,14 @@ conversation-based game with no puzzle data to fetch.
     sites' JavaScript has no refresh call. The accounts API
     (`accounts-api.theatlantic.com/api/v2.0/`) only has `auth/login/`,
     `auth/logout/`, `auth/authorize-email/` and `user/`.
-  - Renewal most likely happens on `www.theatlantic.com` page loads, which
-    block data-center IPs. So a server can't keep a stored token alive, and
-    stored logins need a fresh `atljwt6` about monthly.
+  - In a browser, `atljwt6` is re-issued by account API calls such as
+    `POST zendesk/token/` and `POST subscriptions/preview-modification/`.
+    Those authenticate with the account site's `tritonsessionid` session
+    cookie (which lasts about a day) and a CSRF token, not with `atljwt6`.
+    They're POSTs with side effects, and the second is subscription-related,
+    so this library never calls them.
+  - So a server can't keep a stored token alive, and stored logins need a
+    fresh `atljwt6` about monthly. Warn ahead of `Account.expires_at`.
 - **The entitlements cookie:** `atljwt` (not httpOnly) carries `premium_access`, `paymeter_access`, `ad_free` and `staff`.
 - **Saved games:** `batchGameStates(items: [{gameSlug, gameDate, gameId}])`
   returns `{items, unprocessedKeys}` (a DynamoDB-style batch). Up to 25 keys
