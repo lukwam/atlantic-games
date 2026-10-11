@@ -1,0 +1,810 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://crossword.info/xml/rectangular-puzzle"
+	xmlns:tns="http://crossword.info/xml/rectangular-puzzle"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<complexType name="rectangular-puzzle-type">
+		<annotation>
+			<documentation> The root element for puzzles based on rectangular array of squares. All
+				data should be UTF-8 encoded. </documentation>
+		</annotation>
+		<sequence>
+			<element name="metadata" type="tns:metadata-type"
+				minOccurs="0" maxOccurs="1" />
+			<element name="instructions" type="tns:snippet-type" minOccurs="0"
+				maxOccurs="1">
+				<annotation>
+					<documentation> Any special instructions on how to fill in the puzzle etc.
+						Typically displayed when the puzzle is shown or printed. </documentation>
+				</annotation>
+			</element>
+			<choice>
+				<annotation>
+					<documentation> Four types of puzzles are supported crossword with clues, coded
+						crossword, word search and sudoku. </documentation>
+				</annotation>
+				<element name="crossword" type="tns:crossword-type" />
+				<element name="sudoku" type="tns:sudoku-type" />
+				<element name="coded" type="tns:coded-type" />
+				<element name="word-search" type="tns:word-search-type" />
+			</choice>
+		</sequence>
+		<attribute name="alphabet" use="optional">
+			<annotation>
+				<documentation> This attribute is a string which contains letters and numbers used
+					in the puzzle. For standard puzzles the value is a concatenated string of single
+					characters (e.g. "ABCDEFGHIJKLMNOPQRSTUVWXYZ"). For sudoku puzzles with
+					multi-letter answers the value may instead be a comma-separated list of entries
+					(e.g. "1,2,3,10,11,12"). </documentation>
+			</annotation>
+		</attribute>
+	</complexType>
+
+	<complexType name="metadata-type">
+		<all>
+			<element name="title" type="xs:string" />
+			<element name="created" type="xs:string" />
+			<element name="creator" type="xs:string" />
+			<element name="editor" type="xs:string" />
+			<element name="rights" type="xs:string" />
+			<element name="copyright" type="xs:string" />
+			<element name="publisher" type="xs:string" />
+			<element name="identifier" type="anyURI" />
+			<element name="description" type="xs:string" />
+		</all>
+	</complexType>
+
+	<complexType name="picture-type">
+		<sequence>
+			<choice>
+				<element name="encoded-image" type="xs:string">
+					<annotation>
+						<documentation> It is BASE64 encoded image </documentation>
+					</annotation>
+				</element>
+				<element name="svg">
+					<annotation>
+						<documentation> SVG content </documentation>
+					</annotation>
+					<complexType mixed="true">
+						<sequence>
+							<any namespace="http://www.w3.org/2000/svg" processContents="lax"
+								minOccurs="0"
+								maxOccurs="unbounded" />
+						</sequence>
+						<anyAttribute namespace="##any" processContents="lax" />
+					</complexType>
+				</element>
+			</choice>
+		</sequence>
+		<attribute name="format" use="required">
+			<annotation>
+				<documentation> Specifies the format of the image </documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="xs:string">
+					<enumeration value="JPG" />
+					<enumeration value="GIF" />
+					<enumeration value="PNG" />
+					<enumeration value="WEBP" />
+					<enumeration value="SVG" />
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="rebus" type="boolean" use="optional"
+			default="false">
+			<annotation>
+				<documentation> Only if letter square; If true then background picture visible only
+					in solution, multi-letter text in puzzle </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="href" type="anyURI" use="optional">
+			<annotation>
+				<documentation> URL for clicking on picture </documentation>
+			</annotation>
+		</attribute>
+	</complexType>
+
+	<complexType name="crossword-type">
+		<annotation>
+			<documentation>Crossword</documentation>
+		</annotation>
+		<sequence>
+			<element name="grid" type="tns:grid-type" maxOccurs="1"
+				minOccurs="1">
+				<annotation>
+					<documentation> Rectangular grid. To emulate shape crosswords omit (or use
+						type="void") cells which are out of bounds of the shape. </documentation>
+				</annotation>
+			</element>
+			<element name="word" type="tns:word-type"
+				maxOccurs="unbounded" minOccurs="1">
+				<annotation>
+					<documentation> Links several cells into one word. If the word is not hidden
+						than all cells of the word are highlighted when only one of is selected. If
+						a word is linked with a clue than the clue is highlighted when selected a
+						cell which belongs to the word and the word is highlighted when a user
+						selects the clue. </documentation>
+				</annotation>
+			</element>
+			<element name="clues" type="tns:clues-container-type"
+				maxOccurs="2" minOccurs="0">
+				<annotation>
+					<documentation>Blocks of clues.</documentation>
+				</annotation>
+			</element>
+		</sequence>
+	</complexType>
+
+	<complexType name="word-search-type">
+		<annotation>
+			<documentation>Word search</documentation>
+		</annotation>
+		<sequence>
+			<element name="grid" type="tns:grid-type" maxOccurs="1"
+				minOccurs="1">
+				<annotation>
+					<documentation> Rectangular grid. To emulate shape crosswords omit (or use
+						type="void") cells which are out of bounds of the shape. </documentation>
+				</annotation>
+			</element>
+			<element name="word" type="tns:word-type"
+				maxOccurs="unbounded" minOccurs="1">
+				<annotation>
+					<documentation> locations of search words. </documentation>
+				</annotation>
+			</element>
+			<element name="clues" type="tns:clues-container-type"
+				maxOccurs="1" minOccurs="1">
+				<annotation>
+					<documentation> Blocks of clues (words to find). </documentation>
+				</annotation>
+			</element>
+		</sequence>
+	</complexType>
+
+	<simpleType name="color-type">
+		<annotation>
+			<documentation> Use HTML (#FFFFFF) format to define colors. </documentation>
+		</annotation>
+		<restriction base="xs:string" />
+	</simpleType>
+
+	<complexType name="sudoku-type">
+		<annotation>
+			<documentation> This element is to store Sudoku puzzle. </documentation>
+		</annotation>
+		<sequence>
+			<element name="grid" type="tns:grid-type" minOccurs="1"
+				maxOccurs="1" />
+		</sequence>
+		<attribute name="box-width" type="positiveInteger"
+			use="required">
+			<annotation>
+				<documentation> cell count width of Sudoku box </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="box-height" type="positiveInteger"
+			use="required">
+			<annotation>
+				<documentation> cell count height of Sudoku box </documentation>
+			</annotation>
+		</attribute>
+	</complexType>
+
+	<complexType name="coded-type">
+		<annotation>
+			<documentation> This element is to store coded crossword. </documentation>
+		</annotation>
+		<sequence>
+			<element name="grid" type="tns:grid-type" minOccurs="1"
+				maxOccurs="1" />
+			<element name="word" type="tns:word-type" minOccurs="1"
+				maxOccurs="unbounded" />
+		</sequence>
+	</complexType>
+
+	<complexType name="grid-type">
+		<sequence>
+			<element name="grid-look" type="tns:grid-look-type"
+				maxOccurs="1" minOccurs="1" />
+			<element name="cell" type="tns:cell-type"
+				maxOccurs="unbounded" minOccurs="1">
+			</element>
+		</sequence>
+		<attribute name="width" type="int" use="required" />
+		<attribute name="height" type="int" use="required" />
+	</complexType>
+
+	<complexType name="word-type">
+		<annotation>
+			<documentation> Word is a union of cells. The most general format is store words as a
+				list of cells where every cell is identified by its coordinates. It is very flexible
+				but verbose format. To make it less verbose 'range' is also supported. Range is
+				string 'start-finish' (e.g. 5-10). First number is considered to be start position,
+				so to create 'from right to left' or 'up' orientation use inversed ranges where
+				first number is greater (e.g. 10-5). </documentation>
+		</annotation>
+		<sequence>
+			<element name="cells" type="tns:cells-in-word-type"
+				minOccurs="0" maxOccurs="unbounded">
+			</element>
+		</sequence>
+		<attribute name="id" type="positiveInteger" use="required">
+			<annotation>
+				<documentation> Id is used to refer to the word from a clue. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="x" type="tns:cell-range-type" use="optional">
+			<annotation>
+				<documentation> Range (e.g. 5-10) or one number of cells. Direction is from first
+					number to the second. In other words first number can be greater. In this case
+					direction is 'from right to left'. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="y" type="tns:cell-range-type" use="optional">
+			<annotation>
+				<documentation> Range (e.g. 5-10) or one number of cells. Direction is from first
+					number to the second. In other words first number can be greater. In this case
+					direction is 'up'. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="solution" use="optional">
+			<annotation>
+				<documentation> Used to specify multi-word solutions. E.g. 'Big Ben' instead of
+					'BIGBEN'. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="hidden" type="boolean" use="optional">
+			<annotation>
+				<documentation> If true than cells in this word are not highlighted together and
+					link between clue and a cell is not visible for users. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="keyword" type="boolean" use="optional">
+			<annotation>
+				<documentation> If true than the word is keyword. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="is-theme" type="boolean" use="optional">
+			<annotation>
+				<documentation> Optionally flags the word as a theme entry. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="word-separator-bars" type="boolean" use="optional">
+			<annotation>
+				<documentation> If true, thick separator bars are drawn between words in the keyword
+					entry row. Spaces in the solution string determine bar positions. </documentation>
+			</annotation>
+		</attribute>
+	</complexType>
+
+	<complexType name="cells-in-word-type">
+		<annotation />
+		<attribute name="x" type="tns:cell-range-type" use="required">
+			<annotation>
+				<documentation> Range (e.g. 5-10) or one number of cells. Direction is from first
+					number to the second. In other words first number can be greater. In this case
+					direction is 'from right to left'. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="y" type="tns:cell-range-type" use="required">
+			<annotation>
+				<documentation> Range (e.g. 5-10) or one number of cells. Direction is from first
+					number to the second. In other words first number can be greater. In this case
+					direction is 'up'. </documentation>
+			</annotation>
+		</attribute>
+	</complexType>
+
+	<simpleType name="cell-range-type">
+		<annotation>
+			<documentation> Range (e.g. 5-10) or one number (6) </documentation>
+		</annotation>
+		<restriction base="string" />
+	</simpleType>
+
+	<complexType name="clues-container-type">
+		<annotation>
+			<documentation> Used to render some clues as one block. </documentation>
+		</annotation>
+		<sequence>
+			<element name="title" type="tns:snippet-type" minOccurs="0"
+				maxOccurs="1">
+				<annotation>
+					<documentation>Title of the block.</documentation>
+				</annotation>
+			</element>
+			<element name="clue" type="tns:clue-type" minOccurs="1"
+				maxOccurs="unbounded">
+				<annotation>
+					<documentation>List of clues.</documentation>
+				</annotation>
+			</element>
+		</sequence>
+		<attribute name="ordering" type="tns:clue-ordering-type"
+			use="optional">
+			<annotation>
+				<documentation> Specifies if random, alphabetic, by-position or standard ordering of
+					clues. by-position is common in France and Italy. If not present assume normal
+					numbering unless numbered-sides element present, in which case by-position. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="hide-numbers" type="boolean" use="optional"
+			default="false">
+			<annotation>
+				<documentation> Specifies if random, alphabetic or standard ordering of clues </documentation>
+			</annotation>
+		</attribute>
+
+	</complexType>
+
+	<complexType name="grid-look-type">
+		<annotation>
+			<documentation> This element is to store stylistic parameters of the grid. </documentation>
+		</annotation>
+		<sequence>
+			<element name="numbered-sides"
+				type="tns:numbered-sides-type" maxOccurs="1" minOccurs="0">
+				<annotation>
+					<documentation> Enables to have numbered sides of the puzzle. </documentation>
+				</annotation>
+			</element>
+			<element name="arrows" type="tns:arrow-settings-type"
+				minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation> Shape and position of clues-in-squares arrows Sizes are measured
+						as fraction of square size. </documentation>
+				</annotation>
+			</element>
+		</sequence>
+		<attribute name="italian-style" type="boolean" use="optional">
+			<annotation>
+				<documentation> If true than blocks are rendered in Italian style. Default value is
+					false. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="bars-in-collocations" type="boolean"
+			use="optional">
+			<annotation>
+				<documentation> If true, left-bar and top-bar attributes on cells are
+					collocation separators rather than normal bars that split entries.
+				</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="collocation-separator-style"
+			type="tns:collocation-separator-style-type" use="optional">
+			<annotation>
+				<documentation> Visual style for collocation separators. If omitted while
+					bars-in-collocations is true, the style is bar. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="thick-border" type="boolean" use="optional">
+			<annotation>
+				<documentation> Borders are thicker (2px) if this attribute is true. Default value
+					is false. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="numbering-scheme"
+			type="tns:numbering-scheme-type" use="required">
+			<annotation>
+				<documentation> Can be normal, sequential, coded, none. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="cell-size-in-pixels" type="int"
+			use="optional">
+			<annotation>
+				<documentation> Allows to specify size of cells in pixel. Default value is 21. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="grid-line-color" type="tns:color-type"
+			use="required">
+			<annotation>
+				<documentation> Color of lines of the grid. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="block-color" type="tns:color-type"
+			use="required">
+			<annotation>
+				<documentation>Color of blocks</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="clue-background-color" type="tns:color-type"
+			use="optional">
+			<annotation>
+				<documentation>Background color of clue squares</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="font-color" type="tns:color-type"
+			use="required">
+			<annotation>
+				<documentation>Letter color.</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="number-color" type="tns:color-type"
+			use="required">
+			<annotation>
+				<documentation> Color used for numbers in left and right-top numbers. </documentation>
+			</annotation>
+		</attribute>
+
+		<attribute name="clue-square-divider-width" type="double"
+			use="optional" default="1">
+			<annotation>
+				<documentation> width (as fraction of cell size) of the divider line between
+					multiple clues in one clue square. Between 0 and 1. </documentation>
+			</annotation>
+		</attribute>
+
+		<attribute name="font" type="xs:string" use="optional">
+			<annotation>
+				<documentation> CSS font shorthand for letters in the grid. Supports optional style
+					(italic), weight (bold), and family (e.g. "bold italic Arial"). Overrides the
+					default sans-serif rendering. </documentation>
+			</annotation>
+		</attribute>
+
+		<attribute name="clue-square-font" type="xs:string" use="optional">
+			<annotation>
+				<documentation> CSS font shorthand for text in clue squares. Same format as the
+					'font' attribute. Defaults to the value of 'font' if not specified. </documentation>
+			</annotation>
+		</attribute>
+
+	</complexType>
+
+	<complexType name="cell-type">
+		<annotation>
+			<documentation> This type contains attributes used to configure one cell. </documentation>
+		</annotation>
+		<sequence>
+			<element name="clue" type="tns:clue-type"
+				maxOccurs="unbounded" minOccurs="0">
+				<annotation>
+					<documentation>Clues in the cell.</documentation>
+				</annotation>
+			</element>
+			<element name="arrow" type="tns:arrow-type"
+				maxOccurs="unbounded" minOccurs="0">
+				<annotation>
+					<documentation> This element can be used to define arrows which should be drawn
+						inside the cell. </documentation>
+				</annotation>
+			</element>
+			<element name="background-picture" type="tns:picture-type"
+				maxOccurs="1" minOccurs="0">
+				<annotation>
+					<documentation> Background image of the cell. </documentation>
+				</annotation>
+			</element>
+		</sequence>
+		<attribute name="x" type="tns:cell-range-type" use="required">
+			<annotation>
+				<documentation> X-position of the cell. For spanned cell set range (e.g. '1-2') </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="y" type="tns:cell-range-type" use="required">
+			<annotation>
+				<documentation>Y-position of the cell.</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="type" type="tns:cell-type-enum" use="optional"
+			default="letter">
+			<annotation>
+				<documentation> Type of the cell: letter, block, void, clue. Default value is
+					letter. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="solution" use="optional">
+			<annotation>
+				<documentation>Solution for this cell.</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="solve-state" use="optional">
+			<annotation>
+				<documentation> The current solution entered in the square by a solver Useful to
+					save/load state of a puzzle. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="solve-status" use="optional"
+			type="tns:solve-status-enum">
+			<annotation>
+				<documentation> If pencil or revealed (cheated) if pencil then the letter is
+					rendered as 'temporary'? Useful to save/load state of a puzzle. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="hint" type="boolean" use="optional">
+			<annotation>
+				<documentation> If true than the solution is visible for a user. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="number" use="optional">
+			<annotation>
+				<documentation> Number in top left corner. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="top-right-number" use="optional">
+			<annotation>
+				<documentation> Number in top right corner </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="bottom-right-number" use="optional">
+			<annotation>
+				<documentation> Number in bottom right corner </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="left-bar" type="boolean" use="optional">
+			<annotation>
+				<documentation>Left-side bar</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="top-bar" type="boolean" use="optional">
+			<annotation>
+				<documentation>Upper bar</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="background-shape"
+			type="tns:background-shapes-enum" use="optional">
+			<annotation>
+				<documentation> Background shape. Currently 'circle' is only supported background
+					shape. Letter squares only. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="background-shape-color" type="tns:color-type"
+			use="optional">
+			<annotation>
+				<documentation> Color for background shape. If not set, background-color is used for
+					the shape color. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="background-color" type="tns:color-type"
+			use="optional">
+			<annotation>
+				<documentation> Background color allows to override grid background for this cell. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="foreground-color" type="tns:color-type"
+			use="optional">
+			<annotation>
+				<documentation> Foreground color allows to override grid foreground for this cell. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="noclue" type="positiveInteger"
+			use="optional">
+			<annotation>
+				<documentation> if 1 then no across clue, if 2 no down clue, if 3 neither. Default
+					0. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="bold" type="boolean" use="optional">
+			<annotation>
+				<documentation>Bold letter</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="italic" type="boolean" use="optional">
+			<annotation>
+				<documentation>Italic letter</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="clue-font-lines" type="double"
+			use="optional">
+			<annotation>
+				<documentation> Font size for clue square clues as the number of text lines per
+					square </documentation>
+			</annotation>
+		</attribute>
+	</complexType>
+
+	<complexType name="arrow-type">
+		<annotation>
+			<documentation> This element can be used to define arrows which should be drawn inside
+				the cell. </documentation>
+		</annotation>
+		<attribute name="from" type="tns:arrow-from-position-enum"
+			use="required">
+			<annotation>
+				<documentation> Arrow start position. Valid values are {left,right,top,bottom,
+					topleft, topright,bottomleft,bottomright}. Actual start position for left right
+					will be calculated with respect to 'from-fraction' attribute. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="from-fraction" type="double" use="optional"
+			default="0.5">
+			<annotation>
+				<documentation> Defines actual start pixel. Valid values are in the range [0, 1].
+					'0' means top (left) corner if from is left or right (top, bottom). '1' means
+					bottom (right) corner if from is left or right (top, bottom). </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="to" type="tns:arrow-position-enum"
+			use="required">
+			<annotation>
+				<documentation>Arrow direction {left,right,top,bottom)</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="continue-word" type="boolean" use="optional"
+			default="false">
+			<annotation>
+				<documentation> Set if the arrow is used to continue a word rather than point from a
+					clue </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="hidden" type="boolean" use="optional"
+			default="false">
+			<annotation>
+				<documentation>Whether to hide the arrow in the puzzle</documentation>
+			</annotation>
+		</attribute>
+	</complexType>
+
+	<simpleType name="arrow-from-position-enum">
+		<annotation>
+			<documentation> This type is enumeration of valid values for attributes 'from' starting
+				position of an 'arrow' element. </documentation>
+		</annotation>
+		<restriction base="xs:string">
+			<enumeration value="left" />
+			<enumeration value="right" />
+			<enumeration value="top" />
+			<enumeration value="bottom" />
+			<enumeration value="bottomleft" />
+			<enumeration value="bottomright" />
+			<enumeration value="topleft" />
+			<enumeration value="topright" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="arrow-position-enum">
+		<annotation>
+			<documentation> This type is enumeration of valid values for attributes 'to' in 'arrow'
+				element giving pointing direction. </documentation>
+		</annotation>
+		<restriction base="xs:string">
+			<enumeration value="left" />
+			<enumeration value="right" />
+			<enumeration value="top" />
+			<enumeration value="bottom" />
+		</restriction>
+	</simpleType>
+
+	<complexType name="numbered-sides-type">
+		<attribute name="top" />
+		<attribute name="left" />
+	</complexType>
+
+	<complexType name="arrow-settings-type">
+		<attribute name="stem" type="double" use="optional" />
+		<attribute name="head-width" type="double" use="optional" />
+		<attribute name="head-length" type="double" use="optional" />
+		<attribute name="bend-start" type="double" use="optional" />
+		<attribute name="bend-end" type="double" use="optional" />
+		<attribute name="bend-side-offset" type="double" use="optional" />
+	</complexType>
+
+	<simpleType name="numbering-scheme-type">
+		<restriction base="xs:string">
+			<enumeration value="normal" />
+			<enumeration value="sequential" />
+			<enumeration value="coded" />
+			<enumeration value="none" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="collocation-separator-style-type">
+		<restriction base="xs:string">
+			<enumeration value="bar" />
+			<enumeration value="dotted" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="clue-ordering-type">
+		<restriction base="xs:string">
+			<enumeration value="normal" />
+			<enumeration value="by-position" />
+			<enumeration value="random" />
+			<enumeration value="alphabetical" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="cell-type-enum">
+		<restriction base="xs:string">
+			<enumeration value="letter" />
+			<enumeration value="block" />
+			<enumeration value="void" />
+			<enumeration value="clue" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="background-shapes-enum">
+		<restriction base="xs:string">
+			<enumeration value="circle" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="solve-status-enum">
+		<restriction base="xs:string">
+			<enumeration value="pencil" />
+			<enumeration value="revealed" />
+		</restriction>
+	</simpleType>
+
+	<element name="rectangular-puzzle"
+		type="tns:rectangular-puzzle-type">
+	</element>
+
+	<complexType name="clue-type" mixed="true">
+		<sequence>
+			<annotation>
+				<documentation> In general can contain any html snippet, but at this time only
+					'span' 'b' 'i' 'u' 'sub' 'sup' are supported. Also the mixed content is not
+					supported at this moment. So, all not-formatted text should be wrapped into
+					'spans'. If all text has no format it can be stored without spans. </documentation>
+			</annotation>
+			<element ref="tns:snippet-part" maxOccurs="unbounded"
+				minOccurs="0" />
+		</sequence>
+		<attribute name="word" type="tns:word-ref" use="required">
+			<annotation>
+				<documentation> Used to link word (solution) and the clue. </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="number" use="optional">
+			<annotation>
+				<documentation>Number of the clue.</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="format" use="optional">
+			<annotation>
+				<documentation> If present it should simply be added in brackets after the clue, so
+					clue appears as, 'Clue (format)' </documentation>
+			</annotation>
+		</attribute>
+		<attribute name="is-link" type="integer" use="optional"
+			default="0">
+			<annotation>
+				<documentation> If the word is part of a linked clue (clue for a word spanning
+					multiple cell regions), and the contents merely refers the solver to another
+					clue for the same word id, is-link is the number of the part of the link
+					referred to e.g. for word spanning 1-4, 5-6 and 9-10, if this clue is for 5-6,
+					is-link=1 </documentation>
+			</annotation>
+		</attribute>
+
+		<attribute name="hint-url" type="anyURI" use="optional" />
+		<attribute name="citation" use="optional" />
+		<attribute name="tags" use="optional" />
+	</complexType>
+
+
+	<element name="snippet-part" type="tns:snippet-type"
+		abstract="true" />
+	<element name="span" type="tns:snippet-type"
+		substitutionGroup="tns:snippet-part" />
+	<element name="b" type="tns:snippet-type"
+		substitutionGroup="tns:snippet-part" />
+	<element name="i" type="tns:snippet-type"
+		substitutionGroup="tns:snippet-part" />
+	<element name="u" type="tns:snippet-type"
+		substitutionGroup="tns:snippet-part" />
+	<element name="sup" type="tns:snippet-type"
+		substitutionGroup="tns:snippet-part" />
+	<element name="sub" type="tns:snippet-type"
+		substitutionGroup="tns:snippet-part" />
+	<element name="br" substitutionGroup="tns:snippet-part">
+		<annotation>
+			<documentation> Line break. </documentation>
+		</annotation>
+		<complexType />
+	</element>
+
+	<complexType name="snippet-type" mixed="true">
+		<sequence>
+			<element ref="tns:snippet-part" maxOccurs="unbounded"
+				minOccurs="0" />
+		</sequence>
+	</complexType>
+
+	<simpleType name="word-ref">
+		<restriction base="positiveInteger" />
+	</simpleType>
+</schema>

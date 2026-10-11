@@ -1,0 +1,125 @@
+{
+ "status": 0,
+ "seriesToPuzzleMetadata": {
+  "atlantic": [
+   {
+    "gridWidth": 15,
+    "gridHeight": 15,
+    "numWords": 70,
+    "title": "Sunday, October 11, 2026",
+    "subtitle": "",
+    "author": "Zachary Edward-Brown; edited by Kelsey Dixon",
+    "puzzleId": "atlantic_20261011",
+    "puzzleType": "CROSSWORD",
+    "publicationTime": 1791691260000,
+    "publicationTimeZone": "US/Eastern",
+    "thumbnailURL": "https://cdn.theatlantic.com/media/files/2023/crossword-icons/crossword-icon.png"
+   },
+   {
+    "gridWidth": 10,
+    "gridHeight": 10,
+    "numWords": 28,
+    "title": "Saturday, October 10, 2026",
+    "subtitle": "",
+    "author": "Amanda Rafkin; edited by Kelsey Dixon",
+    "puzzleId": "atlantic_20261010",
+    "puzzleType": "CROSSWORD",
+    "publicationTime": 1791604860000,
+    "publicationTimeZone": "US/Eastern",
+    "thumbnailURL": "https://cdn.theatlantic.com/media/files/2023/crossword-icons/crossword-icon.png"
+   },
+   {
+    "gridWidth": 9,
+    "gridHeight": 9,
+    "numWords": 20,
+    "title": "Friday, October 9, 2026",
+    "subtitle": "",
+    "author": "Amanda Rafkin; edited by Kelsey Dixon",
+    "puzzleId": "atlantic_20261009",
+    "puzzleType": "CROSSWORD",
+    "publicationTime": 1791518460000,
+    "publicationTimeZone": "US/Eastern",
+    "thumbnailURL": "https://cdn.theatlantic.com/media/files/2023/crossword-icons/crossword-icon.png"
+   },
+   {
+    "gridWidth": 8,
+    "gridHeight": 8,
+    "numWords": 20,
+    "title": "Thursday, October 8, 2026",
+    "subtitle": "",
+    "author": "Amanda Rafkin; edited by Kelsey Dixon",
+    "puzzleId": "atlantic_20261008",
+    "puzzleType": "CROSSWORD",
+    "publicationTime": 1791432060000,
+    "publicationTimeZone": "US/Eastern",
+    "thumbnailURL": "https://cdn.theatlantic.com/media/files/2023/crossword-icons/crossword-icon.png"
+   },
+   {
+    "gridWidth": 7,
+    "gridHeight": 7,
+    "numWords": 16,
+    "title": "Wednesday, October 7, 2026",
+    "subtitle": "",
+    "author": "Amanda Rafkin; edited by Kelsey Dixon",
+    "puzzleId": "atlantic_20261007",
+    "puzzleType": "CROSSWORD",
+    "publicationTime": 1791345660000,
+    "publicationTimeZone": "US/Eastern",
+    "thumbnailURL": "https://cdn.theatlantic.com/media/files/2023/crossword-icons/crossword-icon.png"
+   },
+   {
+    "gridWidth": 6,
+    "gridHeight": 6,
+    "numWords": 12,
+    "title": "Tuesday, October 6, 2026",
+    "subtitle": "",
+    "author": "Amanda Rafkin; edited by Kelsey Dixon",
+    "puzzleId": "atlantic_20261006",
+    "puzzleType": "CROSSWORD",
+    "publicationTime": 1791259260000,
+    "publicationTimeZone": "US/Eastern",
+    "thumbnailURL": "https://cdn.theatlantic.com/media/files/2023/crossword-icons/crossword-icon.png"
+   },
+   {
+    "gridWidth": 5,
+    "gridHeight": 5,
+    "numWords": 10,
+    "title": "Monday, October 5, 2026",
+    "subtitle": "",
+    "author": "Amanda Rafkin; edited by Kelsey Dixon",
+    "puzzleId": "atlantic_20261005",
+    "puzzleType": "CROSSWORD",
+    "publicationTime": 1791172860000,
+    "publicationTimeZone": "US/Eastern",
+    "thumbnailURL": "https://cdn.theatlantic.com/media/files/2023/crossword-icons/crossword-icon.png"
+   },
+   {
+    "gridWidth": 15,
+    "gridHeight": 15,
+    "numWords": 72,
+    "title": "Sunday, October 4, 2026",
+    "subtitle": "",
+    "author": "Bhupunn Ingpalangsrikul; edited by Kelsey Dixon",
+    "puzzleId": "atlantic_20261004",
+    "puzzleType": "CROSSWORD",
+    "publicationTime": 1791086460000,
+    "publicationTimeZone": "US/Eastern",
+    "thumbnailURL": "https://cdn.theatlantic.com/media/files/2023/crossword-icons/crossword-icon.png"
+   },
+   {
+    "gridWidth": 15,
+    "gridHeight": 15,
+    "numWords": 70,
+    "title": "Sunday, June 14, 2026",
+    "subtitle": "",
+    "author": "Fritz Juhnke; edited by Kelsey Dixon",
+    "puzzleId": "atlantics_20260614",
+    "puzzleType": "CROSSWORD",
+    "publicationTime": 1781409600000,
+    "publicationTimeZone": "America/New_York",
+    "thumbnailURL": "https://cdn.theatlantic.com/media/files/2023/crossword-icons/crossword-icon.png"
+   }
+  ]
+ },
+ "hasMore": true
+}

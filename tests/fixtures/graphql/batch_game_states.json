@@ -1,0 +1,174 @@
+{
+ "data": {
+  "batchGameStates": {
+   "items": [
+    {
+     "gameKey": "2026-10-08:bracket-city:v1",
+     "gameSlug": "bracket-city",
+     "gameDate": "2026-10-08",
+     "gameId": "v1",
+     "progress": "complete",
+     "gameState": {
+      "puzzleDate": "2026-10-08",
+      "initialPuzzle": "[🩻 [[\"see ___ [damage to stockings 🏃‍♀️]!\" 🐾]-marking [[dominant m[the A in [some in[a spray one might turn you o[\"you ___?\" (iconic line from a [\"last ___ not l[compass RIGHT]\"]ler 🛎️)]e]gible assets, for short]A 🍺] 🇬🇷]bet constituent] 🏴‍☠️]-➡️ ___ ⬅️ Romano 🤷‍♂️]theon patents the microwave",
+      "displayState": "Raytheon patents the microwave",
+      "solvedExpressions": [
+       "damage to stockings 🏃‍♀️",
+       "compass RIGHT",
+       "\"see ___ run!\" 🐾",
+       "\"last ___ not least\"",
+       "\"you ___?\" (iconic line from a butler 🛎️)",
+       "a spray one might turn you orange",
+       "some intangible assets, for short",
+       "the A in IPA 🍺",
+       "dominant male 🇬🇷",
+       "alphabet constituent",
+       "spot-marking letter 🏴‍☠️",
+       "🩻 X-➡️ ___ ⬅️ Romano 🤷‍♂️"
+      ],
+      "totalKeystrokes": 80,
+      "minimumKeystrokes": 64,
+      "wrongGuesses": 1,
+      "wrongGuessList": [
+       "nope"
+      ],
+      "peekedClues": [],
+      "megaPeekedClues": [],
+      "hintModeClues": [],
+      "isComplete": true,
+      "progress": "complete",
+      "updatedAt": 1791518400000,
+      "solvedOnPubDate": true
+     },
+     "updatedAt": 1791518400000,
+     "createdAt": "2026-10-11T12:00:00Z",
+     "userUUID": "00000000-0000-4000-8000-000000000001"
+    },
+    {
+     "gameKey": "2026-10-10:bracket-city:v1",
+     "gameSlug": "bracket-city",
+     "gameDate": "2026-10-10",
+     "gameId": "v1",
+     "progress": "inProgress",
+     "gameState": {
+      "puzzleDate": "2026-10-10",
+      "initialPuzzle": "the Wuchang Up[The House of the ___ [type of [varieties include highball, lowball, and magnifying]es useful to poker [one on the literal ⚽️ or [type of [you might [what the sleepless do, with [[a back one is a very cool way to enter a pool] 🪙 or mix 🥗]] over a [[__ ✖️ 2 🟰 excellent toy / __ ✖️ 2 ➕️ [Pa's partner] 🟰 excellent cellist]rk that's not in England] one] for Adam and Eve (post-apple)]urative 😉 field]s] 🌅] begins",
+      "displayState": "the Wuchang Up[The House of the ___ [type of glasses useful to poker [one on the literal ⚽️ or [type of [you might [what the sleepless do, with [flip 🪙 or mix 🥗]] over a [[__ ✖️ 2 🟰 excellent toy / __ ✖️ 2 ➕️ Ma 🟰 excellent cellist]rk that's not in England] one] for Adam and Eve (post-apple)]urative 😉 field]s] 🌅] begins",
+      "solvedExpressions": [
+       "varieties include highball, lowball, and magnifying",
+       "a back one is a very cool way to enter a pool",
+       "Pa's partner"
+      ],
+      "totalKeystrokes": 20,
+      "minimumKeystrokes": 0,
+      "wrongGuesses": 0,
+      "wrongGuessList": [],
+      "peekedClues": [],
+      "megaPeekedClues": [],
+      "hintModeClues": [],
+      "isComplete": false,
+      "progress": "inProgress",
+      "updatedAt": 1791691200000
+     },
+     "updatedAt": 1791691200000,
+     "createdAt": "2026-10-11T12:00:00Z",
+     "userUUID": "00000000-0000-4000-8000-000000000001"
+    },
+    {
+     "gameKey": "2026-10-11:bracket-city:v1",
+     "gameSlug": "bracket-city",
+     "gameDate": "2026-10-11",
+     "gameId": "v1",
+     "progress": "notStarted",
+     "gameState": {
+      "puzzleDate": "2026-10-11",
+      "initialPuzzle": "ACT UP activists \"Seize [😵‍💫 [[where to find Atlanta or Tbilisi] was on [beam of [reassuring [seeing done by a t[your + [word before Sharona (The Knack) or [ghost's exclamation] ([person who tells you where to sit at [something to be separated from \"state\" ⛪️] or the theater] feat. Alicia Keys)]]ist] at the end of the tunnel]] Charles's] ➡️ ___ ⬅️ + alt + delete 😖] of the FDA\"",
+      "displayState": "ACT UP activists \"Seize [😵‍💫 [[where to find Atlanta or Tbilisi] was on [beam of [reassuring [seeing done by a t[your + [word before Sharona (The Knack) or [ghost's exclamation] ([person who tells you where to sit at [something to be separated from \"state\" ⛪️] or the theater] feat. Alicia Keys)]]ist] at the end of the tunnel]] Charles's] ➡️ ___ ⬅️ + alt + delete 😖] of the FDA\"",
+      "solvedExpressions": [],
+      "totalKeystrokes": 0,
+      "minimumKeystrokes": 0,
+      "wrongGuesses": 0,
+      "wrongGuessList": [],
+      "peekedClues": [],
+      "megaPeekedClues": [],
+      "hintModeClues": [],
+      "isComplete": false,
+      "progress": "notStarted",
+      "updatedAt": 1791777600000
+     },
+     "updatedAt": 1791777600000,
+     "createdAt": "2026-10-11T12:00:00Z",
+     "userUUID": "00000000-0000-4000-8000-000000000001"
+    },
+    {
+     "gameKey": "2025-10-31:bracket-city:v1",
+     "gameSlug": "bracket-city",
+     "gameDate": "2025-10-31",
+     "gameId": "v1",
+     "progress": "complete",
+     "gameState": {
+      "puzzleDate": "2025-10-31",
+      "initialPuzzle": "M[word before Deco or Gar[genre for George C[[flim-___ man (s[break ___ (pass [it's guzzled by a large vehicle]) 💨]ler)]mable dryer byproduct]on or a strong smell]el]in Lu[not just [if you [song you'd think would have [half a year (in weeks)] words (but often it's 27)]ize the letters in \"alpha[something to do with your [oft-referenced line in business 🍑] dollar]ize\" this [Hester [intrusively inquire about a sen[first trick for Fido, maybe]ive subject]nne wore a [negatively affect for life 🦁]let one] comes first (alphabetically)]]r nails 95 Theses to a church door in Wittenberg",
+      "displayState": "Martin Luther nails 95 Theses to a church door in Wittenberg",
+      "solvedExpressions": [
+       "it's guzzled by a large vehicle",
+       "half a year (in weeks)",
+       "oft-referenced line in business 🍑",
+       "first trick for Fido, maybe",
+       "negatively affect for life 🦁",
+       "break ___ (pass gas) 💨",
+       "song you'd think would have 26 words (but often it's 27)",
+       "something to do with your bottom dollar",
+       "intrusively inquire about a sensitive subject",
+       "flim-___ man (swindler)",
+       "Hester Prynne wore a Scarlet one",
+       "flammable dryer byproduct",
+       "if you alphabetize the letters in \"alphabetize\" this letter comes first (alphabetically)",
+       "genre for George Clinton or a strong smell",
+       "not just a",
+       "word before Deco or Garfunkel"
+      ],
+      "totalKeystrokes": 50,
+      "minimumKeystrokes": 50,
+      "wrongGuesses": 0,
+      "wrongGuessList": [],
+      "peekedClues": [],
+      "megaPeekedClues": [],
+      "hintModeClues": [],
+      "isComplete": true,
+      "progress": "complete",
+      "updatedAt": 1761926400000
+     },
+     "updatedAt": 1761926400000,
+     "createdAt": "2026-10-11T12:00:00Z",
+     "userUUID": "00000000-0000-4000-8000-000000000001"
+    },
+    {
+     "gameKey": "2026-10-09:rabbithole:53",
+     "gameSlug": "rabbithole",
+     "gameDate": "2026-10-09",
+     "gameId": "53",
+     "progress": "complete",
+     "gameState": {
+      "currentQuestion": 6,
+      "questionResults": [
+       "correct_first_try",
+       "correct_first_try",
+       "correct_with_hint",
+       "correct_first_try",
+       "correct_with_choice",
+       "correct_first_try",
+       "incorrect"
+      ],
+      "score": 15,
+      "status": "complete"
+     },
+     "updatedAt": 1791600000000,
+     "createdAt": "2026-10-09T13:00:00Z",
+     "userUUID": "00000000-0000-4000-8000-000000000001"
+    }
+   ],
+   "unprocessedKeys": []
+  }
+ }
+}

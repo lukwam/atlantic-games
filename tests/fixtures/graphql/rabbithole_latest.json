@@ -1,0 +1,137 @@
+{
+ "data": {
+  "rabbitholePuzzles": {
+   "results": [
+    {
+     "id": "53",
+     "publishedAt": "2026-10-09T04:00:00Z",
+     "status": "published",
+     "byline": "Drew Goins",
+     "recirculationBlurb": "And back to Zuckerberg: David writes that <em>The Social Reckoning </em>is a bit of a mess—and is missing the stuff that made <em>The Social Network </em>unforgettable. It is mostly, he writes, “a long and drawn-out ‘Told ya so!’”",
+     "article": {
+      "id": "BlogArticle:688907",
+      "url": "https://www.theatlantic.com/culture/2026/10/the-social-reckoning-movie-review-aaron-sorkin/688907/",
+      "authors": [
+       {
+        "displayName": "David Sims"
+       }
+      ]
+     },
+     "questions": [
+      {
+       "id": "328",
+       "questionText": "<div>The director Aaron Sorkin was reportedly shocked when Jesse Eisenberg chose not to reprise <strong>what role </strong>in this year’s sequel to a 2010 film?</div>",
+       "canonicalAnswer": "Mark Zuckerberg",
+       "validAnswers": [
+        "Zuckerberg",
+        "Zuck"
+       ],
+       "targetAccuracy": 75,
+       "hintText": "Jeremy Strong got cast in <em>The Social Reckoning</em>.",
+       "choices": [
+        "Lex Luthor",
+        "Howard Hughes"
+       ]
+      },
+      {
+       "id": "329",
+       "questionText": "<div>Mark Zuckerberg went with blue for Facebook’s branding because he has deuteranopia—a form of <strong>what condition</strong>?</div>",
+       "canonicalAnswer": "Color blindness",
+       "validAnswers": [
+        "Red-green color blindness",
+        "Congenital red-green color blindness",
+        "Green blindness",
+        "Color blind"
+       ],
+       "targetAccuracy": 75,
+       "hintText": "“Blue is the richest,” he said. “I can see all of blue.”",
+       "choices": [
+        "Astigmatism",
+        "Synesthesia"
+       ]
+      },
+      {
+       "id": "330",
+       "questionText": "<div><strong>What fast-paced game</strong> released a special deck in 2017 to help players who have color blindness tell the red, yellow, blue, and green cards apart?</div>",
+       "canonicalAnswer": "Uno",
+       "validAnswers": [
+        "Uno ColorAdd",
+        "ColorAdd"
+       ],
+       "targetAccuracy": 75,
+       "hintText": "There’s only one like it.",
+       "choices": [
+        "Monopoly Deal",
+        "Crazy Eights"
+       ]
+      },
+      {
+       "id": "331",
+       "questionText": "<div>An Uno spin-off game known in Europe as Uno Zero—in which players try to get the lowest score over nine rounds—invokes <strong>what sport</strong> in its U.S. name?</div>",
+       "canonicalAnswer": "Golf",
+       "validAnswers": [
+        "Uno Golf"
+       ],
+       "targetAccuracy": 75,
+       "hintText": "Play two games for the full experience.",
+       "choices": [
+        "Football",
+        "Darts"
+       ]
+      },
+      {
+       "id": "332",
+       "questionText": "<div>In golf, finishing a hole one stroke under par scores a birdie; two under par, an eagle; and three under par, <strong>what soaring seabird</strong>? </div>",
+       "canonicalAnswer": "Albatross",
+       "validAnswers": [
+        "Double eagle"
+       ],
+       "targetAccuracy": 75,
+       "hintText": "Or find it around the neck of a mariner.",
+       "choices": [
+        "Gull",
+        "Pelican"
+       ]
+      },
+      {
+       "id": "333",
+       "questionText": "<div>The world’s largest albatross breeding colony is on <strong>what Pacific atoll</strong> that, fittingly, about splits the distance between Tokyo and San Francisco?</div>",
+       "canonicalAnswer": "Midway",
+       "validAnswers": [
+        "Midway Atoll",
+        "Midway Islands"
+       ],
+       "targetAccuracy": 75,
+       "hintText": "It’s a good pit stop.",
+       "choices": [
+        "Bikini",
+        "Rangiroa"
+       ]
+      },
+      {
+       "id": "334",
+       "questionText": "<div>In 1949, <strong>what U.S. city</strong> renamed an airport to honor the Battle of Midway shortly before renaming its other major airport for an Irish American war hero?</div>",
+       "canonicalAnswer": "Chicago",
+       "validAnswers": [],
+       "targetAccuracy": 75,
+       "hintText": "They’re MDW and ORD.",
+       "choices": [
+        "Honolulu",
+        "San Francisco"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "extensions": {
+  "surrogateKeys": {
+   "length": 29,
+   "keys": [
+    "article-id-688907",
+    "author-6625"
+   ]
+  }
+ }
+}

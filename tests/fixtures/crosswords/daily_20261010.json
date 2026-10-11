@@ -1,0 +1,1036 @@
+{
+ "unlinkGridAndClues": false,
+ "boxImageURL": "",
+ "boxToPlacedWordsIdxs": [
+  [
+   null,
+   null,
+   [
+    2,
+    21
+   ],
+   [
+    3,
+    21
+   ],
+   [
+    5,
+    21
+   ],
+   [
+    7,
+    21
+   ],
+   [
+    9,
+    21
+   ],
+   null,
+   null,
+   null
+  ],
+  [
+   null,
+   [
+    1,
+    19
+   ],
+   [
+    2,
+    19
+   ],
+   [
+    3,
+    19
+   ],
+   [
+    5,
+    19
+   ],
+   [
+    7,
+    19
+   ],
+   [
+    9,
+    19
+   ],
+   [
+    11,
+    19
+   ],
+   null,
+   null
+  ],
+  [
+   [
+    0,
+    14
+   ],
+   [
+    1,
+    14
+   ],
+   [
+    2,
+    14
+   ],
+   [
+    3,
+    14
+   ],
+   [
+    5,
+    14
+   ],
+   [
+    7,
+    14
+   ],
+   [
+    9,
+    14
+   ],
+   [
+    11,
+    14
+   ],
+   [
+    12,
+    14
+   ],
+   null
+  ],
+  [
+   [
+    15,
+    0
+   ],
+   [
+    1,
+    15
+   ],
+   [
+    2,
+    15
+   ],
+   null,
+   null,
+   null,
+   [
+    26,
+    9
+   ],
+   [
+    11,
+    26
+   ],
+   [
+    12,
+    26
+   ],
+   [
+    13,
+    26
+   ]
+  ],
+  [
+   [
+    16,
+    0
+   ],
+   [
+    1,
+    16
+   ],
+   [
+    2,
+    16
+   ],
+   null,
+   null,
+   [
+    8,
+    25
+   ],
+   [
+    9,
+    25
+   ],
+   [
+    11,
+    25
+   ],
+   [
+    12,
+    25
+   ],
+   [
+    13,
+    25
+   ]
+  ],
+  [
+   [
+    17,
+    0
+   ],
+   [
+    1,
+    17
+   ],
+   [
+    2,
+    17
+   ],
+   null,
+   [
+    6,
+    24
+   ],
+   [
+    8,
+    24
+   ],
+   [
+    9,
+    24
+   ],
+   [
+    11,
+    24
+   ],
+   [
+    12,
+    24
+   ],
+   [
+    13,
+    24
+   ]
+  ],
+  [
+   [
+    18,
+    0
+   ],
+   [
+    1,
+    18
+   ],
+   [
+    2,
+    18
+   ],
+   [
+    4,
+    18
+   ],
+   [
+    6,
+    18
+   ],
+   [
+    8,
+    18
+   ],
+   null,
+   [
+    27,
+    11
+   ],
+   [
+    12,
+    27
+   ],
+   [
+    13,
+    27
+   ]
+  ],
+  [
+   null,
+   [
+    20,
+    1
+   ],
+   [
+    2,
+    20
+   ],
+   [
+    4,
+    20
+   ],
+   [
+    6,
+    20
+   ],
+   [
+    8,
+    20
+   ],
+   [
+    10,
+    20
+   ],
+   [
+    11,
+    20
+   ],
+   [
+    12,
+    20
+   ],
+   null
+  ],
+  [
+   null,
+   null,
+   [
+    22,
+    2
+   ],
+   [
+    4,
+    22
+   ],
+   [
+    6,
+    22
+   ],
+   [
+    8,
+    22
+   ],
+   [
+    10,
+    22
+   ],
+   [
+    11,
+    22
+   ],
+   null,
+   null
+  ],
+  [
+   null,
+   null,
+   null,
+   [
+    23,
+    4
+   ],
+   [
+    6,
+    23
+   ],
+   [
+    8,
+    23
+   ],
+   [
+    10,
+    23
+   ],
+   null,
+   null,
+   null
+  ]
+ ],
+ "hideClueColumns": false,
+ "box": [
+  [
+   "\u0000",
+   "\u0000",
+   "M",
+   "O",
+   "I",
+   "R",
+   "A",
+   "\u0000",
+   "\u0000",
+   "\u0000"
+  ],
+  [
+   "\u0000",
+   "M",
+   "A",
+   "R",
+   "T",
+   "I",
+   "N",
+   "I",
+   "\u0000",
+   "\u0000"
+  ],
+  [
+   "J",
+   "O",
+   "K",
+   "E",
+   "S",
+   "O",
+   "N",
+   "M",
+   "E",
+   "\u0000"
+  ],
+  [
+   "A",
+   "M",
+   "E",
+   "\u0000",
+   "\u0000",
+   "\u0000",
+   "U",
+   "B",
+   "E",
+   "R"
+  ],
+  [
+   "F",
+   "B",
+   "I",
+   "\u0000",
+   "\u0000",
+   "G",
+   "L",
+   "A",
+   "R",
+   "E"
+  ],
+  [
+   "A",
+   "L",
+   "T",
+   "\u0000",
+   "B",
+   "E",
+   "S",
+   "T",
+   "I",
+   "E"
+  ],
+  [
+   "R",
+   "O",
+   "B",
+   "E",
+   "R",
+   "T",
+   "\u0000",
+   "M",
+   "L",
+   "K"
+  ],
+  [
+   "\u0000",
+   "G",
+   "I",
+   "V",
+   "E",
+   "S",
+   "W",
+   "A",
+   "Y",
+   "\u0000"
+  ],
+  [
+   "\u0000",
+   "\u0000",
+   "G",
+   "E",
+   "N",
+   "O",
+   "A",
+   "N",
+   "\u0000",
+   "\u0000"
+  ],
+  [
+   "\u0000",
+   "\u0000",
+   "\u0000",
+   "S",
+   "E",
+   "N",
+   "D",
+   "\u0000",
+   "\u0000",
+   "\u0000"
+  ]
+ ],
+ "clueNums": [
+  [
+   null,
+   null,
+   "8",
+   "10",
+   "13",
+   "15",
+   "17",
+   null,
+   null,
+   null
+  ],
+  [
+   null,
+   "6",
+   null,
+   null,
+   null,
+   null,
+   null,
+   "20",
+   null,
+   null
+  ],
+  [
+   "1",
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   "22",
+   null
+  ],
+  [
+   "2",
+   null,
+   null,
+   null,
+   null,
+   null,
+   "18",
+   null,
+   null,
+   "23"
+  ],
+  [
+   "3",
+   null,
+   null,
+   null,
+   null,
+   "16",
+   null,
+   null,
+   null,
+   null
+  ],
+  [
+   "4",
+   null,
+   null,
+   null,
+   "14",
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  [
+   "5",
+   null,
+   null,
+   "11",
+   null,
+   null,
+   null,
+   "21",
+   null,
+   null
+  ],
+  [
+   null,
+   "7",
+   null,
+   null,
+   null,
+   null,
+   "19",
+   null,
+   null,
+   null
+  ],
+  [
+   null,
+   null,
+   "9",
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  [
+   null,
+   null,
+   null,
+   "12",
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ]
+ ],
+ "title": "Saturday, October 10, 2026",
+ "subtitle": "",
+ "description": "",
+ "copyright": "\u00a9 Atlantic",
+ "author": "Amanda Rafkin; edited by Kelsey Dixon",
+ "authorEmail": "",
+ "authorURL": "",
+ "attributions": "",
+ "id": "atlantic_20261010",
+ "locale": "en-US",
+ "puzzleType": "CROSSWORD",
+ "srcJPZ": false,
+ "isImported": true,
+ "tn_url": "https://cdn.theatlantic.com/media/files/2023/crossword-icons/crossword-icon.png",
+ "backdropURL": "",
+ "shareImageURL": "",
+ "creationTime": 0,
+ "modifiedTime": 0,
+ "publishTime": 1791604860000,
+ "publishTimeZone": "US/Eastern",
+ "correctSoundURL": "",
+ "wrongSoundURL": "",
+ "contestModeEnabled": false,
+ "hideInPicker": false,
+ "w": 10,
+ "h": 10,
+ "placedWords": [
+  {
+   "originalTerm": "JAFAR",
+   "nBoxes": 5,
+   "x": 2,
+   "y": 0,
+   "acrossNotDown": true,
+   "clueNum": "1",
+   "clue": {
+    "clue": "<i>Aladdin</i> character with a snake-headed staff"
+   },
+   "wordLens": [
+    5
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "MOMBLOG",
+   "nBoxes": 7,
+   "x": 1,
+   "y": 1,
+   "acrossNotDown": true,
+   "clueNum": "6",
+   "clue": {
+    "clue": "Site that might push cloth diapers"
+   },
+   "wordLens": [
+    7
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "MAKEITBIG",
+   "nBoxes": 9,
+   "x": 0,
+   "y": 2,
+   "acrossNotDown": true,
+   "clueNum": "8",
+   "clue": {
+    "clue": "Become a household name, maybe"
+   },
+   "wordLens": [
+    9
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "ORE",
+   "nBoxes": 3,
+   "x": 0,
+   "y": 3,
+   "acrossNotDown": true,
+   "clueNum": "10",
+   "clue": {
+    "clue": "Resource in the board game A Feast for Odin"
+   },
+   "wordLens": [
+    3
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "EVES",
+   "nBoxes": 4,
+   "x": 6,
+   "y": 3,
+   "acrossNotDown": true,
+   "clueNum": "11",
+   "clue": {
+    "clue": "Before times?"
+   },
+   "wordLens": [
+    4
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "ITS",
+   "nBoxes": 3,
+   "x": 0,
+   "y": 4,
+   "acrossNotDown": true,
+   "clueNum": "13",
+   "clue": {
+    "clue": "\"What, like ___ hard?\" (<i>Legally Blonde</i> quote)"
+   },
+   "wordLens": [
+    3
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "BRENE",
+   "nBoxes": 5,
+   "x": 5,
+   "y": 4,
+   "acrossNotDown": true,
+   "clueNum": "14",
+   "clue": {
+    "clue": "<i>Daring Greatly</i> author Brown"
+   },
+   "wordLens": [
+    5
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "RIO",
+   "nBoxes": 3,
+   "x": 0,
+   "y": 5,
+   "acrossNotDown": true,
+   "clueNum": "15",
+   "clue": {
+    "clue": "Home to the world's largest Carnival celebration"
+   },
+   "wordLens": [
+    3
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "GETSON",
+   "nBoxes": 6,
+   "x": 4,
+   "y": 5,
+   "acrossNotDown": true,
+   "clueNum": "16",
+   "clue": {
+    "clue": "Boards"
+   },
+   "wordLens": [
+    6
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "ANNULS",
+   "nBoxes": 6,
+   "x": 0,
+   "y": 6,
+   "acrossNotDown": true,
+   "clueNum": "17",
+   "clue": {
+    "clue": "Invalidates, in a way"
+   },
+   "wordLens": [
+    6
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "WAD",
+   "nBoxes": 3,
+   "x": 7,
+   "y": 6,
+   "acrossNotDown": true,
+   "clueNum": "19",
+   "clue": {
+    "clue": "Hunk of cash, maybe"
+   },
+   "wordLens": [
+    3
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "IMBATMAN",
+   "nBoxes": 8,
+   "x": 1,
+   "y": 7,
+   "acrossNotDown": true,
+   "clueNum": "20",
+   "clue": {
+    "clue": "Famous line improvised by Michael Keaton"
+   },
+   "wordLens": [
+    8
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "EERILY",
+   "nBoxes": 6,
+   "x": 2,
+   "y": 8,
+   "acrossNotDown": true,
+   "clueNum": "22",
+   "clue": {
+    "clue": "In a creepy way"
+   },
+   "wordLens": [
+    6
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "REEK",
+   "nBoxes": 4,
+   "x": 3,
+   "y": 9,
+   "acrossNotDown": true,
+   "clueNum": "23",
+   "clue": {
+    "clue": "Stink"
+   },
+   "wordLens": [
+    4
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "JOKESONME",
+   "nBoxes": 9,
+   "x": 2,
+   "y": 0,
+   "acrossNotDown": false,
+   "clueNum": "1",
+   "clue": {
+    "clue": "\"Welp, I guess I'm the foolish one after all\""
+   },
+   "wordLens": [
+    9
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "AME",
+   "nBoxes": 3,
+   "x": 3,
+   "y": 0,
+   "acrossNotDown": false,
+   "clueNum": "2",
+   "clue": {
+    "clue": "Letters on some Black churches"
+   },
+   "wordLens": [
+    3
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "FBI",
+   "nBoxes": 3,
+   "x": 4,
+   "y": 0,
+   "acrossNotDown": false,
+   "clueNum": "3",
+   "clue": {
+    "clue": "Clarice Starling's employer: abbr."
+   },
+   "wordLens": [
+    3
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "ALT",
+   "nBoxes": 3,
+   "x": 5,
+   "y": 0,
+   "acrossNotDown": false,
+   "clueNum": "4",
+   "clue": {
+    "clue": "Account that keeps your identity a secret"
+   },
+   "wordLens": [
+    3
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "ROBERT",
+   "nBoxes": 6,
+   "x": 6,
+   "y": 0,
+   "acrossNotDown": false,
+   "clueNum": "5",
+   "clue": {
+    "clue": "Pattinson who has four major film releases in 2026"
+   },
+   "wordLens": [
+    6
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "MARTINI",
+   "nBoxes": 7,
+   "x": 1,
+   "y": 1,
+   "acrossNotDown": false,
+   "clueNum": "6",
+   "clue": {
+    "clue": "Bond order?"
+   },
+   "wordLens": [
+    7
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "GIVESWAY",
+   "nBoxes": 8,
+   "x": 7,
+   "y": 1,
+   "acrossNotDown": false,
+   "clueNum": "7",
+   "clue": {
+    "clue": "Yields"
+   },
+   "wordLens": [
+    8
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "MOIRA",
+   "nBoxes": 5,
+   "x": 0,
+   "y": 2,
+   "acrossNotDown": false,
+   "clueNum": "8",
+   "clue": {
+    "clue": "___ Rose, famous Catherine O'Hara role"
+   },
+   "wordLens": [
+    5
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "GENOAN",
+   "nBoxes": 6,
+   "x": 8,
+   "y": 2,
+   "acrossNotDown": false,
+   "clueNum": "9",
+   "clue": {
+    "clue": "Like pesto"
+   },
+   "wordLens": [
+    6
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "SEND",
+   "nBoxes": 4,
+   "x": 9,
+   "y": 3,
+   "acrossNotDown": false,
+   "clueNum": "12",
+   "clue": {
+    "clue": "Button that might be hit right before you see a typo"
+   },
+   "wordLens": [
+    4
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "BESTIE",
+   "nBoxes": 6,
+   "x": 5,
+   "y": 4,
+   "acrossNotDown": false,
+   "clueNum": "14",
+   "clue": {
+    "clue": "Person with whom you might share a necklace"
+   },
+   "wordLens": [
+    6
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "GLARE",
+   "nBoxes": 5,
+   "x": 4,
+   "y": 5,
+   "acrossNotDown": false,
+   "clueNum": "16",
+   "clue": {
+    "clue": "Look that can kill"
+   },
+   "wordLens": [
+    5
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "UBER",
+   "nBoxes": 4,
+   "x": 3,
+   "y": 6,
+   "acrossNotDown": false,
+   "clueNum": "18",
+   "clue": {
+    "clue": "App with a fare-estimate feature"
+   },
+   "wordLens": [
+    4
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "MLK",
+   "nBoxes": 3,
+   "x": 6,
+   "y": 7,
+   "acrossNotDown": false,
+   "clueNum": "21",
+   "clue": {
+    "clue": "Activist celebrated on the third Monday of January: abbr."
+   },
+   "wordLens": [
+    3
+   ],
+   "intersects": false
+  }
+ ],
+ "tags": []
+}

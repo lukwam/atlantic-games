@@ -1,0 +1,71 @@
+name: Atlantic live check
+
+# Checks every game against The Atlantic and Amuse Labs each morning,
+# publishes the README badge, and opens an issue when something breaks.
+on:
+  schedule:
+    - cron: "30 11 * * *"  # 7:30am in New York (6:30am in winter)
+  workflow_dispatch:
+
+permissions:
+  contents: write  # publish the badge to the badges branch
+  issues: write    # open and close the live-check issue
+
+concurrency:
+  group: live-check
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[test]"
+      - name: Run the live tests
+        id: tests
+        continue-on-error: true
+        run: pytest -m live -q
+      - name: Check The Atlantic
+        id: check
+        continue-on-error: true
+        env:
+          # Optional repository secret (the atljwt6 cookie); adds a check of saved games.
+          ATLANTIC_COOKIES: ${{ secrets.ATLANTIC_COOKIES }}
+        run: python scripts/live_check.py --json live-check-results.json --badge live-check.json --summary "$GITHUB_STEP_SUMMARY"
+      - name: Publish badge
+        if: always() && hashFiles('live-check.json') != ''
+        run: scripts/publish_badges.sh live-check.json
+      - name: Open or update the live-check issue
+        if: steps.check.outcome == 'failure' || steps.tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TESTS: ${{ steps.tests.outcome }}
+        run: |
+          failed=$(python -c "import json; r=json.load(open('live-check-results.json')); print('\n'.join(f'- **{c[\"name\"]}**: {c[\"detail\"]}' for c in r['results'] if not c['ok']))" 2>/dev/null || echo "- The check didn't finish")
+          if [ "$TESTS" = "failure" ]; then
+            failed=$(printf '%s\n- **pytest -m live** failed' "$failed")
+          fi
+          body=$(printf 'The nightly Atlantic live check failed. The Atlantic or Amuse Labs may have changed something.\n\n%s\n\n[Run details](%s)' "$failed" "$RUN_URL")
+          gh label create live-check --color B60205 --description "Atlantic live check failures" 2>/dev/null || true
+          issue=$(gh issue list --label live-check --state open --json number --jq '.[0].number')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "$body"
+          else
+            gh issue create --label live-check --title "Atlantic live check failing" --body "$body"
+          fi
+      - name: Close the live-check issue when passing again
+        if: steps.check.outcome == 'success' && steps.tests.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          issue=$(gh issue list --label live-check --state open --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$issue" ]; then
+            gh issue close "$issue" --comment "Passing again: $RUN_URL"
+          fi
+      - name: Fail if a check failed
+        if: steps.check.outcome == 'failure' || steps.tests.outcome == 'failure'
+        run: exit 1

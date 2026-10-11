@@ -1,0 +1,373 @@
+{
+ "title": "Monday, September 24, 2018 ",
+ "subtitle": "",
+ "description": "",
+ "copyright": "\u00a9 The Atlantic",
+ "author": "Caleb Madison",
+ "authorEmail": "",
+ "authorURL": "https://www.theatlantic.com/author/caleb-madison/",
+ "pauseMessage": "<div style=\"text-align:center\">\r\n   <img style=\"width:70%;\" src=\"\t\r\nhttps://cdn.theatlantic.com/assets/media/files/pause_4-cropb.jpg\"/>\r\n</div>",
+ "endMessage": "<div style=\"text-align:center\">\r\n<img width=\"300\" height=\"200\" src=\"\t\r\nhttps://cdn.theatlantic.com/assets/media/files/congrats-11-crop.gif\"/>   \r\n</div>",
+ "attributions": "",
+ "id": "2fbb3c8f",
+ "locale": "en-US",
+ "puzzleType": "CROSSWORD",
+ "srcJPZ": false,
+ "isImported": false,
+ "creationTime": 0,
+ "modifiedTime": 0,
+ "publishTime": 1537761660000,
+ "publishTimeZone": "US/Eastern",
+ "mediaPreviewEnabled": false,
+ "mediaPreviewAndTextEnabled": true,
+ "hideClueColumns": false,
+ "contestModeEnabled": false,
+ "unlinkGridAndClues": false,
+ "hideInPicker": false,
+ "w": 5,
+ "h": 5,
+ "box": [
+  [
+   "H",
+   "E",
+   "F",
+   "T",
+   "\u0000"
+  ],
+  [
+   "A",
+   "B",
+   "O",
+   "U",
+   "T"
+  ],
+  [
+   "H",
+   "E",
+   "L",
+   "L",
+   "O"
+  ],
+  [
+   "A",
+   "R",
+   "K",
+   "I",
+   "N"
+  ],
+  [
+   "\u0000",
+   "T",
+   "S",
+   "P",
+   "S"
+  ]
+ ],
+ "clueNums": [
+  [
+   "1",
+   "5",
+   "7",
+   "8",
+   "0"
+  ],
+  [
+   "2",
+   "0",
+   "0",
+   "0",
+   "9"
+  ],
+  [
+   "3",
+   "0",
+   "0",
+   "0",
+   "0"
+  ],
+  [
+   "4",
+   "0",
+   "0",
+   "0",
+   "0"
+  ],
+  [
+   "0",
+   "6",
+   "0",
+   "0",
+   "0"
+  ]
+ ],
+ "placedWords": [
+  {
+   "originalTerm": "HAHA",
+   "nBoxes": 4,
+   "x": 0,
+   "y": 0,
+   "acrossNotDown": true,
+   "clueNum": "1",
+   "clue": {
+    "clue": "\"That's a really good one!\"",
+    "fullSentenceLowerCase": ""
+   },
+   "wordLens": [
+    4
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "EBERT",
+   "nBoxes": 5,
+   "x": 0,
+   "y": 1,
+   "acrossNotDown": true,
+   "clueNum": "5",
+   "clue": {
+    "clue": "Onetime partner in film criticism for Roeper or Siskel",
+    "fullSentenceLowerCase": ""
+   },
+   "wordLens": [
+    5
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "FOLKS",
+   "nBoxes": 5,
+   "x": 0,
+   "y": 2,
+   "acrossNotDown": true,
+   "clueNum": "7",
+   "clue": {
+    "clue": "Good people of the community",
+    "fullSentenceLowerCase": ""
+   },
+   "wordLens": [
+    5
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "TULIP",
+   "nBoxes": 5,
+   "x": 0,
+   "y": 3,
+   "acrossNotDown": true,
+   "clueNum": "8",
+   "clue": {
+    "clue": "Bulb blooming in spring",
+    "fullSentenceLowerCase": ""
+   },
+   "wordLens": [
+    5
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "TONS",
+   "nBoxes": 4,
+   "x": 1,
+   "y": 4,
+   "acrossNotDown": true,
+   "clueNum": "9",
+   "clue": {
+    "clue": "Buttloads",
+    "fullSentenceLowerCase": ""
+   },
+   "wordLens": [
+    4
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "HEFT",
+   "nBoxes": 4,
+   "x": 0,
+   "y": 0,
+   "acrossNotDown": false,
+   "clueNum": "1",
+   "clue": {
+    "clue": "Weightiness",
+    "fullSentenceLowerCase": ""
+   },
+   "wordLens": [
+    4
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "ABOUT",
+   "nBoxes": 5,
+   "x": 1,
+   "y": 0,
+   "acrossNotDown": false,
+   "clueNum": "2",
+   "clue": {
+    "clue": "In the vicinity of",
+    "fullSentenceLowerCase": ""
+   },
+   "wordLens": [
+    5
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "HELLO",
+   "nBoxes": 5,
+   "x": 2,
+   "y": 0,
+   "acrossNotDown": false,
+   "clueNum": "3",
+   "clue": {
+    "clue": "\"Greetings!\"",
+    "fullSentenceLowerCase": ""
+   },
+   "wordLens": [
+    5
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "ARKIN",
+   "nBoxes": 5,
+   "x": 3,
+   "y": 0,
+   "acrossNotDown": false,
+   "clueNum": "4",
+   "clue": {
+    "clue": "Alan who won Best Supporting Actor for <i>Little Miss Sunshine</i>",
+    "fullSentenceLowerCase": ""
+   },
+   "wordLens": [
+    5
+   ],
+   "intersects": false
+  },
+  {
+   "originalTerm": "TSPS",
+   "nBoxes": 4,
+   "x": 4,
+   "y": 1,
+   "acrossNotDown": false,
+   "clueNum": "6",
+   "clue": {
+    "clue": "Qtys. of sugar or spice, often",
+    "fullSentenceLowerCase": ""
+   },
+   "wordLens": [
+    4
+   ],
+   "intersects": false
+  }
+ ],
+ "boxToPlacedWordsIdxs": [
+  [
+   [
+    0,
+    5
+   ],
+   [
+    1,
+    5
+   ],
+   [
+    2,
+    5
+   ],
+   [
+    3,
+    5
+   ],
+   null
+  ],
+  [
+   [
+    6,
+    0
+   ],
+   [
+    1,
+    6
+   ],
+   [
+    2,
+    6
+   ],
+   [
+    3,
+    6
+   ],
+   [
+    4,
+    6
+   ]
+  ],
+  [
+   [
+    7,
+    0
+   ],
+   [
+    1,
+    7
+   ],
+   [
+    2,
+    7
+   ],
+   [
+    3,
+    7
+   ],
+   [
+    4,
+    7
+   ]
+  ],
+  [
+   [
+    8,
+    0
+   ],
+   [
+    1,
+    8
+   ],
+   [
+    2,
+    8
+   ],
+   [
+    3,
+    8
+   ],
+   [
+    4,
+    8
+   ]
+  ],
+  [
+   null,
+   [
+    9,
+    1
+   ],
+   [
+    2,
+    9
+   ],
+   [
+    3,
+    9
+   ],
+   [
+    4,
+    9
+   ]
+  ]
+ ],
+ "cellInfos": [],
+ "tags": []
+}
