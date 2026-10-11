@@ -130,6 +130,13 @@ conversation-based game with no puzzle data to fetch.
   - It's an httpOnly RS256 JWT.
   - Claims: `uuid`/`user_uuid`, `exp` (30 days), `refresh_exp` (a year), `token_type: "sliding"`.
   - The site renews it while you browse. *Inferred:* exactly how isn't known.
+  - It isn't renewed by GraphQL requests (they never set cookies), and the
+    sites' JavaScript has no refresh call. The accounts API
+    (`accounts-api.theatlantic.com/api/v2.0/`) only has `auth/login/`,
+    `auth/logout/`, `auth/authorize-email/` and `user/`.
+  - Renewal most likely happens on `www.theatlantic.com` page loads, which
+    block data-center IPs. So a server can't keep a stored token alive, and
+    stored logins need a fresh `atljwt6` about monthly.
 - **The entitlements cookie:** `atljwt` (not httpOnly) carries `premium_access`, `paymeter_access`, `ad_free` and `staff`.
 - **Saved games:** `batchGameStates(items: [{gameSlug, gameDate, gameId}])`
   returns `{items, unprocessedKeys}` (a DynamoDB-style batch). Up to 25 keys
