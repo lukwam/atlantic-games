@@ -27,8 +27,26 @@ jobs:
           name: dist
           path: dist/
 
-  publish:
+  # TestPyPI first, so a broken upload never reaches PyPI.
+  publish-testpypi:
     needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/atlantic-games/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish:
+    needs: publish-testpypi
     runs-on: ubuntu-latest
     environment:
       name: pypi
