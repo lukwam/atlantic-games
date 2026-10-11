@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.0 (2026-10-11)
 
 - **Comparing saved games:** `GameState.advancement`, `better_than()` and `solved` compare snapshots of the same game, so you can keep the best state you've seen (complete > in progress > not started, then more solved; ties keep the earliest finish, or the latest save for unfinished games).
 - **CLI extensions:** `atlgames.cli.extension` is a stable public API for building your own command line on `atlg`: `create_app`, `run`, `FormatOption`, `emit`, `key_value_table`, `get_client` and more.
