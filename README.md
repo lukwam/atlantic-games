@@ -112,8 +112,10 @@ best = max(snapshots, key=lambda game: game.advancement)
 ```
 
 `advancement` ranks complete above in progress above not started, then more
-solved (Bracket City clues, Rabbithole questions answered), then the later
-`updatedAt`.
+solved (Bracket City clues, Rabbithole questions answered). Ties between
+finished games go to the earliest completion, since a replay is usually
+faster and wasn't played on the day; ties between unfinished games go to the
+latest save.
 
 ### Read-only
 

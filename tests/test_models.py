@@ -219,8 +219,11 @@ def test_saved_game_advancement_keeps_the_best_snapshot():
 
     assert done.better_than(reset) and not reset.better_than(done)
     assert more.better_than(partial)  # more solved beats later
-    assert replayed.better_than(done)  # same progress and amount: later wins
+    assert done.better_than(replayed)  # finished ties: the first finish wins
+    assert not replayed.better_than(done)
+    assert more.better_than(_snapshot(BracketCityGame, "inProgress", 100, solvedExpressions=["a", "b"]))
     assert not done.better_than(done)
+    assert done.better_than(_snapshot(BracketCityGame, "complete", None, solvedExpressions=["a", "b"]))
     assert max([reset, partial, done, more], key=lambda s: s.advancement) is done
 
 

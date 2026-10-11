@@ -458,10 +458,18 @@ class GameState(AtlanticModel):
     @property
     def advancement(self) -> tuple[int, int, float]:
         """A sort key for snapshots of the same game, most advanced last:
-        complete > inProgress > notStarted, then more solved, then the later
-        `updatedAt`. `max(snapshots, key=lambda s: s.advancement)` is the
-        best state you've seen."""
-        return (PROGRESS_RANK[self.progress], self.solved, self.updatedAt or 0)
+        complete > inProgress > notStarted, then more solved. Ties go to the
+        *earliest* completion for finished games (a replay is usually faster
+        and wasn't played on the day, so it shouldn't replace your real
+        result) and to the latest `updatedAt` for unfinished ones.
+        `max(snapshots, key=lambda s: s.advancement)` is the best state
+        you've seen."""
+        if self.complete:
+            # Earlier finishes rank higher; a finish with no time ranks last.
+            tiebreak = -self.updatedAt if self.updatedAt else float("-inf")
+        else:
+            tiebreak = self.updatedAt or 0
+        return (PROGRESS_RANK[self.progress], self.solved, tiebreak)
 
     def better_than(self, other: "GameState") -> bool:
         """True if this snapshot is more advanced than another snapshot of the
