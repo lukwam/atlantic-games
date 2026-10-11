@@ -9,6 +9,7 @@ import asyncio
 import datetime
 import email.utils
 import logging
+import re
 import time
 from dataclasses import dataclass
 from dataclasses import field
@@ -31,6 +32,7 @@ GRAPHQL_URL = "https://graphql.theatlantic.com/"
 #: The Atlantic's public GraphQL key, from its own games pages.
 GRAPHQL_API_KEY = "JakhyMEXwa9odtB8gBxFI63ITyKqDGkn7ciGVIJf"
 RETRY_STATUSES = (429, 500, 502, 503, 504)
+_MUTATION = re.compile(r"\s*mutation\b")
 
 
 @dataclass
@@ -55,7 +57,12 @@ Operation = Generator[Request, Any, Any]
 
 def graphql(query: str, variables: Mapping[str, Any] | None = None, auth: bool = False,
             not_found: str | None = None) -> Request:
-    """Return a GraphQL GET request (The Atlantic's API accepts GET)."""
+    """Return a GraphQL GET request (The Atlantic's API accepts GET).
+
+    The library is read-only: mutations are refused before any request.
+    """
+    if _MUTATION.match(query):
+        raise ValueError("atlantic-games is read-only and never sends GraphQL mutations")
     params = {"query": " ".join(query.split())}
     if variables:
         import json

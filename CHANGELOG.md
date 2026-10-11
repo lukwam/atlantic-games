@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 (unreleased)
+
+- **Comparing saved games:** `GameState.advancement`, `better_than()` and `solved` compare snapshots of the same game, so you can keep the best state you've seen (complete > in progress > not started, then more solved, then later).
+- **CLI extensions:** `atlgames.cli.extension` is a stable public API for building your own command line on `atlg`: `create_app`, `run`, `FormatOption`, `emit`, `key_value_table`, `get_client` and more.
+- **Read-only guarantee:** GraphQL mutations are refused before any request, the README documents that the library never writes, and the tests check that every request is a GET.
+
 ## 0.1.0 (2026-10-11)
 
 First release.

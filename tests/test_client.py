@@ -61,6 +61,12 @@ def logged_in(make):
 def mock():
     with respx.mock(assert_all_called=False) as router:
         yield router
+    # The library is read-only: every request any client test makes must be a
+    # GET, and no GraphQL query may be a mutation.
+    for call in router.calls:
+        assert call.request.method == "GET", call.request
+        query = call.request.url.params.get("query", "")
+        assert not query.lstrip().startswith("mutation"), query
 
 
 class GraphQL:

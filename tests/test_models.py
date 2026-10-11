@@ -201,3 +201,39 @@ def test_rabbithole_game():
                           gameId="53", progress="complete",
                           gameState={"questionResults": ["correct_first_try"] * 7, "score": 21})
     assert game.data.score == 21 and game.data.questionResults[0] == "correct_first_try"
+
+
+def _snapshot(model, progress, updated, **state):
+    slug = "bracket-city" if model is BracketCityGame else "rabbithole"
+    game_id = "v1" if model is BracketCityGame else "53"
+    return model(gameKey=f"2026-10-09:{slug}:{game_id}", gameSlug=slug, gameDate="2026-10-09", gameId=game_id,
+                 progress=progress, updatedAt=updated, gameState=state)
+
+
+def test_saved_game_advancement_keeps_the_best_snapshot():
+    done = _snapshot(BracketCityGame, "complete", 100, solvedExpressions=["a", "b"])
+    reset = _snapshot(BracketCityGame, "notStarted", 300)  # newer, but emptied
+    partial = _snapshot(BracketCityGame, "inProgress", 200, solvedExpressions=["a"])
+    more = _snapshot(BracketCityGame, "inProgress", 150, solvedExpressions=["a", "b"])
+    replayed = _snapshot(BracketCityGame, "complete", 400, solvedExpressions=["a", "b"])
+
+    assert done.better_than(reset) and not reset.better_than(done)
+    assert more.better_than(partial)  # more solved beats later
+    assert replayed.better_than(done)  # same progress and amount: later wins
+    assert not done.better_than(done)
+    assert max([reset, partial, done, more], key=lambda s: s.advancement) is done
+
+
+def test_rabbithole_advancement_counts_answered_questions():
+    two = _snapshot(RabbitholeGame, "inProgress", 1, questionResults=["correct_first_try", "incorrect"])
+    one = _snapshot(RabbitholeGame, "inProgress", 2, questionResults=["correct_first_try"])
+    assert two.solved == 2 and two.better_than(one)
+
+
+def test_better_than_refuses_different_games():
+    a = _snapshot(BracketCityGame, "complete", 1)
+    b = a.model_copy(update={"gameDate": "2026-10-10", "gameKey": "2026-10-10:bracket-city:v1"})
+    with pytest.raises(ValueError, match="different games"):
+        a.better_than(b)
+    generic = GameState(gameKey="k", gameSlug="other", gameDate="d", gameId="1", progress="complete")
+    assert generic.solved == 0

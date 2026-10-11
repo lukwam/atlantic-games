@@ -104,7 +104,25 @@ games. Some things to know about saved games:
 - `solvedOnPubDate` was only recorded from about August 2025, so None means
   unknown, not late.
 
-The library is read-only. It never writes saved games.
+To keep the best state you've seen, compare snapshots of the same game:
+
+```python
+best = stored if stored.better_than(fetched) else fetched
+best = max(snapshots, key=lambda game: game.advancement)
+```
+
+`advancement` ranks complete above in progress above not started, then more
+solved (Bracket City clues, Rabbithole questions answered), then the later
+`updatedAt`.
+
+### Read-only
+
+The library never writes anything to The Atlantic or Amuse Labs. Every
+request it makes is a GET; it never sends GraphQL mutations (`saveGameState`
+is refused before any request is made) and never posts plays to Amuse Labs.
+`crossword_play` only loads the crossword's page, as a browser would, to
+read your saved play; Amuse Labs may record that page load, but it doesn't
+change your play. The test suite checks that every request is a GET.
 
 ### Puzzle structure
 
@@ -220,6 +238,40 @@ atlg history bracket-city --from 2026-01-01
 Cookies are stored in `~/.config/atlg/config.ini` (mode 0600), with profiles
 for more than one account (`--profile`, `atlg config profiles`).
 `ATLANTIC_COOKIES` overrides the stored login.
+
+### Building your own command line
+
+`atlgames.cli.extension` lets you build a command line with every `atlg`
+command plus your own, sharing its root options (`--profile`, `--cookies`,
+`--format`), output formats and error messages:
+
+```python
+import typer
+from atlgames.cli.extension import FormatOption, create_app, emit, get_client, run
+
+app = create_app(name="mytool", help="My Atlantic tools.", version="1.0.0")
+sync = typer.Typer(help="Sync my games.")
+app.add_typer(sync, name="sync")
+
+
+@sync.command("bracket-city")
+def sync_bracket_city(fmt: FormatOption = None) -> None:
+    """My October Bracket City games."""
+    games = get_client().bracket_city_games("2026-10-01", "2026-10-31")
+    emit([{"date": g.gameDate, "progress": g.progress.value} for g in games], fmt)
+
+
+def main() -> None:   # point your [project.scripts] entry here
+    run(app)
+```
+
+Each `create_app()` call returns an independent app. `emit(data, fmt,
+table)` prints JSON-compatible data in the requested format, with an optional
+function that renders the table format, and `key_value_table()` builds a
+two-column table. `get_client()` returns a client with the cookies `atlg`
+would use; `resolve_cookies()`, `active_profile()`, `get_setting()` and
+`parse_date()` are there too. The other modules in `atlgames.cli` are
+internal.
 
 ### Archiving
 

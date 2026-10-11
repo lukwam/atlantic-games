@@ -449,6 +449,31 @@ class GameState(AtlanticModel):
     def complete(self) -> bool:
         return self.progress == GameProgress.complete
 
+    @property
+    def solved(self) -> int:
+        """How much of the game is done: clues solved in Bracket City,
+        questions answered in Rabbithole, 0 for other games."""
+        return 0
+
+    @property
+    def advancement(self) -> tuple[int, int, float]:
+        """A sort key for snapshots of the same game, most advanced last:
+        complete > inProgress > notStarted, then more solved, then the later
+        `updatedAt`. `max(snapshots, key=lambda s: s.advancement)` is the
+        best state you've seen."""
+        return (PROGRESS_RANK[self.progress], self.solved, self.updatedAt or 0)
+
+    def better_than(self, other: "GameState") -> bool:
+        """True if this snapshot is more advanced than another snapshot of the
+        same game (see `advancement`). Use it to keep the best state ever seen,
+        since saved games can go backward. Raises ValueError for different games."""
+        if (self.gameSlug, self.gameDate, self.gameId) != (other.gameSlug, other.gameDate, other.gameId):
+            raise ValueError(f"Can't compare different games: {self.gameKey} and {other.gameKey}")
+        return self.advancement > other.advancement
+
+
+PROGRESS_RANK = {GameProgress.notStarted: 0, GameProgress.inProgress: 1, GameProgress.complete: 2}
+
 
 class BracketCityGameData(AtlanticModel):
     """Bracket City's saved game fields."""
@@ -473,6 +498,11 @@ class BracketCityGame(GameState):
     @property
     def data(self) -> BracketCityGameData:
         return BracketCityGameData(**(self.gameState or {}))
+
+    @property
+    def solved(self) -> int:
+        """Clues solved."""
+        return len(self.data.solvedExpressions)
 
     @property
     def efficiency(self) -> float | None:
@@ -503,6 +533,11 @@ class RabbitholeGame(GameState):
     @property
     def data(self) -> RabbitholeGameData:
         return RabbitholeGameData(**(self.gameState or {}))
+
+    @property
+    def solved(self) -> int:
+        """Questions answered (right or wrong)."""
+        return sum(1 for result in self.data.questionResults if result)
 
 
 STATE_MODELS = {"bracket-city": BracketCityGame, "rabbithole": RabbitholeGame}

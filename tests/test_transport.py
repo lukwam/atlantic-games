@@ -270,3 +270,11 @@ async def test_operation_without_requests(kind):
         yield  # pragma: no cover
 
     assert await run(kind, operation()) == "no requests"
+
+
+def test_graphql_refuses_mutations():
+    with pytest.raises(ValueError, match="read-only"):
+        transport.graphql("mutation { saveGameState(items: []) { successCount } }")
+    with pytest.raises(ValueError, match="read-only"):
+        transport.graphql("  mutation Save($items: [SaveGameStateInput!]!) { saveGameState(items: $items) { successCount } }")
+    assert transport.graphql("{ gamesHub { slug } }").url == transport.GRAPHQL_URL
