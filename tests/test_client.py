@@ -215,7 +215,8 @@ async def test_expired_login_is_an_authentication_error(logged_in, mock):
 
 
 async def test_game_states_retries_unprocessed_keys(logged_in, mock):
-    keys = [("bracket-city", "2026-10-10", "v1"), ("rabbithole", "2026-10-09", 53), ("bracket-city", "2026-10-08", "v1")]
+    keys = [("bracket-city", "2026-10-10", "v1"), ("rabbithole", "2026-10-09", 53),
+            ("bracket-city", "2026-10-08", "v1")]
     calls = []
 
     def handler(query, variables):

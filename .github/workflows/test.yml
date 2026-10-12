@@ -28,6 +28,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: ${{ matrix.prerelease }}
       - run: pip install -e ".[api,cli,mcp,test]"
+      - run: ruff check
       - run: pytest --cov=atlgames --cov-report=term --cov-report=json
       - name: Publish the coverage badge
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.python-version == '3.12'

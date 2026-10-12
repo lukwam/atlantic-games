@@ -44,8 +44,6 @@ except ImportError as err:  # pragma: no cover
 
 import httpx
 
-from atlgames import __version__
-from atlgames import formats
 from atlgames import AsyncAtlanticGamesClient
 from atlgames import AtlanticGamesAuthenticationError
 from atlgames import AtlanticGamesExportError
@@ -53,9 +51,11 @@ from atlgames import AtlanticGamesHTTPError
 from atlgames import AtlanticGamesNotFoundError
 from atlgames import AtlanticGamesParseError
 from atlgames import AtlanticGamesRateLimitError
-from atlgames.auth import Account
+from atlgames import __version__
+from atlgames import formats
 from atlgames.auth import ENTITLEMENTS_COOKIE
 from atlgames.auth import SESSION_COOKIE
+from atlgames.auth import Account
 from atlgames.models import BracketCityGame
 from atlgames.models import BracketCityPuzzle
 from atlgames.models import CrosswordListing

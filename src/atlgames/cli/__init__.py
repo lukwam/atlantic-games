@@ -4,8 +4,10 @@ Requires the `cli` extra::
 
     pip install "atlantic-games[cli]"
 
-To build your own command line on top of atlg, use ``create_app()`` and
-``run()``, which can be imported from here.
+To build your own command line on top of atlg, use the public API in
+``atlgames.cli.extension``: ``create_app()``, ``run()``, ``emit()``,
+``FormatOption`` and ``get_client()``. ``create_app`` and ``run`` can also be
+imported from here.
 """
 from typing import Any
 
@@ -31,7 +33,7 @@ def main() -> None:
 def __getattr__(name: str) -> Any:
     """Import create_app and run lazily, so the base install doesn't need Typer."""
     if name in _EXTENSION_NAMES:
-        from atlgames.cli import app
+        from atlgames.cli import extension
 
-        return getattr(app, name)
+        return getattr(extension, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

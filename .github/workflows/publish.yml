@@ -1,8 +1,11 @@
 name: Publish to PyPI
 
+# Tags (v*) publish to TestPyPI, then PyPI. Run it by hand from any branch to
+# try a release on TestPyPI only: https://test.pypi.org/project/atlantic-games/
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,6 +19,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Check the tag matches the package version
+        if: github.ref_type == 'tag'
         run: |
           version=$(python -c "import re; print(re.search(r'__version__ = \"(.+)\"', open('src/atlgames/__init__.py').read()).group(1))")
           test "v${version}" = "${GITHUB_REF_NAME}" || { echo "Tag ${GITHUB_REF_NAME} does not match version ${version}"; exit 1; }
@@ -27,14 +31,14 @@ jobs:
           name: dist
           path: dist/
 
-  # TestPyPI first, so a broken upload never reaches PyPI.
-  publish-testpypi:
+  testpypi:
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: testpypi
       url: https://test.pypi.org/project/atlantic-games/
     permissions:
+      # Trusted publishing: no API token is stored in the repo.
       id-token: write
     steps:
       - uses: actions/download-artifact@v8
@@ -44,9 +48,12 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+          # A version tried by hand before tagging is already there.
+          skip-existing: true
 
   publish:
-    needs: publish-testpypi
+    needs: testpypi
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     environment:
       name: pypi
