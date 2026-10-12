@@ -17,10 +17,10 @@ from atlgames.cli.puzzles import bracket_text
 from atlgames.cli.puzzles import mark
 from atlgames.cli.puzzles import rabbithole_puzzle
 from atlgames.cli.state import date_arg
-from atlgames.cli.views import RABBITHOLE_RESULTS
 from atlgames.cli.state import state
 from atlgames.models import normalize_answer
 from atlgames.models import strip_html
+from atlgames.views import RABBITHOLE_RESULTS
 
 BRACKET_HELP = """Type an answer to solve any clue you can see. Commands:
   /peek N     show the first letter of clue N's answer

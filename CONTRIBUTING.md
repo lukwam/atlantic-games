@@ -50,10 +50,21 @@ src/atlgames/
     stats.py         Streaks and totals computed from saved games
     formats.py       Crossword export: .puz, .ipuz and Crossword Compiler .xml
     api.py           Optional FastAPI app and router (the "api" extra)
+    views.py         Plain data views of puzzles and saved games, for atlg's output formats
     mcp_server.py    Optional MCP server for AI agents (the "mcp" extra)
     cli/             Optional atlg command line (the "cli" extra)
+        app.py       Root command, global options and error messages
+        puzzles.py   Puzzle commands
+        play.py      Terminal play for Bracket City and Rabbithole
+        player.py    stats, today and history
+        archive.py   archive
+        settings.py  auth and config commands
+        output.py    --format handling, shared by every command
+        extension.py Public API for tools built on atlg; keep it backwards compatible
 tests/
     fixtures/        Trimmed captures of real responses; saved games and tokens are made up
+examples/            Small scripts built on the package, and an example API with a Dockerfile
+docs/                endpoints.md: the endpoints, schemas and quirks behind each game
 ```
 
 ## How the client works
@@ -98,11 +109,13 @@ Set `ATLANTIC_COOKIES` to your `atljwt6` cookie to also check your saved games.
    `models.py`. Models allow extra fields, so only type the fields you use or
    document. Both clients get the method automatically.
 2. Add a route to `api.py` that calls the client method, and a command to
-   `cli/` if it's useful on the command line. Hide answers unless asked for.
+   `cli/` if it's useful on the command line. Commands build JSON-compatible
+   data and pass it to `output.emit()` with a table renderer, so every output
+   format works. Hide answers unless `--answers` is given.
 3. Add tests that mock the responses with `respx`, using a trimmed fixture,
    and check the method against the real service before opening a pull
    request.
-4. Update the tables in `README.md`.
+4. Update the tables in `README.md` and add a line to `CHANGELOG.md`.
 
 ## Pull requests
 
@@ -112,6 +125,10 @@ in the description what you checked against the real services.
 
 ## Releases
 
-Maintainers release by bumping `__version__` in `src/atlgames/__init__.py`
-and pushing a `vX.Y.Z` tag. The publish workflow checks the tag matches the
-version, runs the tests and publishes to PyPI.
+Maintainers release by bumping `__version__` in `src/atlgames/__init__.py`,
+updating `CHANGELOG.md`, and pushing a `vX.Y.Z` tag. The publish workflow
+checks the tag matches the version, runs the tests and publishes to TestPyPI,
+then PyPI. To try a release first, run the "Publish to PyPI" workflow by hand
+(Actions → Run workflow) on your branch: it publishes to
+[TestPyPI](https://test.pypi.org/project/atlantic-games/) only, and the tag
+skips that version there later.

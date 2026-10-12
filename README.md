@@ -1,6 +1,10 @@
 # atlantic-games
 
+[![PyPI](https://img.shields.io/pypi/v/atlantic-games)](https://pypi.org/project/atlantic-games/)
+[![Python](https://img.shields.io/pypi/pyversions/atlantic-games)](https://pypi.org/project/atlantic-games/)
 [![Test](https://github.com/lukwam/atlantic-games/actions/workflows/test.yml/badge.svg)](https://github.com/lukwam/atlantic-games/actions/workflows/test.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Flukwam%2Fatlantic-games%2Fbadges%2Fcoverage-badge.json)](https://github.com/lukwam/atlantic-games/actions/workflows/test.yml)
+[![Atlantic live check](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Flukwam%2Fatlantic-games%2Fbadges%2Flive-check.json)](https://github.com/lukwam/atlantic-games/actions/workflows/live.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/lukwam/atlantic-games/blob/main/LICENSE)
 
 An unofficial Python client for The Atlantic's games: Bracket City, the
@@ -199,10 +203,72 @@ else's.
 | `AtlanticGamesParseError` | A page didn't have the expected data, e.g. Amuse Labs changed its format |
 | `AtlanticGamesExportError` | A crossword can't be saved in a file format |
 
+```python
+from atlgames import AtlanticGamesNotFoundError
+
+try:
+    client.bracket_city("1900-01-01")
+except AtlanticGamesNotFoundError:
+    print("No puzzle that day")
+```
+
+### Network behavior
+
 Failed connections, rate limits and server errors are retried 3 times with
 exponential backoff, honoring `Retry-After`. Adjust with
-`AtlanticGamesClient(retries=5, backoff=1.0, timeout=60)`, or pass your own
-`httpx.Client` / `httpx.AsyncClient` as `http_client`.
+`AtlanticGamesClient(retries=5, backoff=1.0, timeout=60)`, or turn retries off
+with `retries=0`.
+
+You can pass your own `httpx.Client` (or `httpx.AsyncClient` for the async
+client) as `http_client`, for example to add caching or a proxy. The client
+doesn't close it.
+
+Cookies are sent only to The Atlantic's API and are never logged.
+
+## Models
+
+Every method returns Pydantic models from `atlgames.models`. Fields The
+Atlantic or Amuse Labs add later are kept rather than rejected, so new fields
+don't break your code. Use `.model_dump()` to get plain dicts.
+
+## Examples
+
+[`examples/`](examples) has small projects built on the package: the
+[most deeply nested](examples/bracket_city_depth.py) Bracket City puzzles,
+[clue reuse](examples/clue_reuse.py) across recent crosswords, your Bracket
+City [keystroke efficiency](examples/bracket_city_efficiency.py) by weekday,
+and [your own REST API](examples/api) in Docker.
+
+## Async apps
+
+`AsyncAtlanticGamesClient` has every method of `AtlanticGamesClient`,
+awaited. Both use [httpx](https://www.python-httpx.org/), so there's no extra
+to install:
+
+```python
+import asyncio
+from atlgames import AsyncAtlanticGamesClient
+
+
+async def main():
+    async with AsyncAtlanticGamesClient(cookies="atljwt6=...") as client:
+        puzzle = await client.bracket_city()
+        games = await client.bracket_city_games("2026-10-01")
+        # Fetch several at once; keep it modest to be polite to The Atlantic.
+        week = await asyncio.gather(*(client.bracket_city(f"2026-10-0{d}") for d in range(1, 8)))
+
+
+asyncio.run(main())
+```
+
+Errors, retries and cookie handling are the same as the sync client's. Pass
+your own `httpx.AsyncClient` as `http_client` to control transport details;
+it isn't closed when the client is. Both clients run the same code for every
+endpoint, so they always have the same methods.
+
+**FastAPI:** use `AsyncAtlanticGamesClient` in `async def` routes, or the sync
+client in plain `def` routes (FastAPI runs those in a thread pool). The
+routes in `atlgames.api` use the async client.
 
 ## Command line
 
@@ -237,9 +303,50 @@ atlg stats
 atlg history bracket-city --from 2026-01-01
 ```
 
-Cookies are stored in `~/.config/atlg/config.ini` (mode 0600), with profiles
-for more than one account (`--profile`, `atlg config profiles`).
-`ATLANTIC_COOKIES` overrides the stored login.
+Cookies are read from `--cookies`, then the `ATLANTIC_COOKIES` environment
+variable, then the active profile (see [Profiles and settings](#profiles-and-settings)).
+
+### Archiving
+
+```bash
+atlg archive bracket-city --from first --to today -o archive
+atlg archive crossword --from 2026-01-01 -o archive --as puz
+```
+
+Archives write one file per date with a manifest, and resume where they
+left off.
+
+### Output formats
+
+Every command takes `--format` (`-f`), like gcloud:
+
+| Format | Output |
+|---|---|
+| `table` | Tables and grids (the default) |
+| `json`, `yaml` | All the data |
+| `csv` | One row per item, nested fields as dotted columns |
+| `value(FIELD,...)` | Tab separated values for scripts, e.g. `value(date,clues,depth)` |
+
+```bash
+atlg bracket-city 2026-10-08 -f "value(date,clues,depth)"
+atlg stats -f json | jq .
+```
+
+### Profiles and settings
+
+Settings are saved per profile in `~/.config/atlg/config.ini` (readable only
+by you), similar to gcloud configurations:
+
+```bash
+atlg config set format json      # default output format for this profile
+atlg config list
+atlg --profile alice auth login  # a second Atlantic account
+atlg config profiles activate alice
+atlg config profiles list
+```
+
+`--profile` or `ATLG_PROFILE` picks a profile for one command. Run
+`atlg --install-completion` for shell completion.
 
 ### Building your own command line
 
@@ -274,16 +381,6 @@ two-column table. `get_client()` returns a client with the cookies `atlg`
 would use; `resolve_cookies()`, `active_profile()`, `get_setting()` and
 `parse_date()` are there too. The other modules in `atlgames.cli` are
 internal.
-
-### Archiving
-
-```bash
-atlg archive bracket-city --from first --to today -o archive
-atlg archive crossword --from 2026-01-01 -o archive --as puz
-```
-
-Archives write one file per date with a manifest, and resume where they
-left off.
 
 ## MCP server for AI agents
 
@@ -355,10 +452,19 @@ puzzles:
 
 [docs/endpoints.md](docs/endpoints.md) has the details: endpoints, schemas and quirks.
 
+## Staying current with The Atlantic
+
+The Atlantic and Amuse Labs change these services without notice. Every
+morning a [live check](https://github.com/lukwam/atlantic-games/actions/workflows/live.yml)
+fetches a real puzzle from every game and runs the live tests. The **Atlantic
+live check** badge above shows the latest result and date, and failures open
+an issue automatically.
+
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). A daily live check catches upstream
-changes.
+The Atlantic and Amuse Labs change these services without notice, so bug
+reports with the failing date and error are very welcome. See
+[CONTRIBUTING.md](CONTRIBUTING.md) to set up a development environment.
 
 ## License
 

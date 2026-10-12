@@ -15,7 +15,7 @@ from rich.text import Text
 from atlgames import AtlanticGamesExportError
 from atlgames import AtlanticGamesNotFoundError
 from atlgames import formats
-from atlgames.cli import views
+from atlgames import views
 from atlgames.cli.dates import parse_date
 from atlgames.cli.output import FormatOption
 from atlgames.cli.output import console
@@ -461,4 +461,3 @@ def list_stacks(fmt: FormatOption = None) -> None:
     """List every Stacks puzzle."""
     data = [{"date": p.date, "id": p.id, "title": p.title} for p in state.client().stacks_puzzles()]
     emit(data, fmt, list_table(["date", "id", "title"], "Stacks"))
-

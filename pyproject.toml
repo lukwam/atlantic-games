@@ -62,6 +62,8 @@ atlg-mcp = "atlgames.mcp_cli:main"
 [project.urls]
 Homepage = "https://github.com/lukwam/atlantic-games"
 Issues = "https://github.com/lukwam/atlantic-games/issues"
+Releases = "https://github.com/lukwam/atlantic-games/releases"
+Changelog = "https://github.com/lukwam/atlantic-games/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

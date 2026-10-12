@@ -16,8 +16,8 @@ from rich.table import Table
 from rich.text import Text
 
 from atlgames import AtlanticGamesNotFoundError
+from atlgames import views
 from atlgames.cli import dates
-from atlgames.cli import views
 from atlgames.cli.dates import format_seconds
 from atlgames.cli.output import FormatOption
 from atlgames.cli.output import emit
