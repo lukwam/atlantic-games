@@ -196,7 +196,8 @@ def crossword(
     ] = None,
     save: Annotated[
         Optional[Path],
-        typer.Option("--save", "-o", help="Save as a crossword file instead: .puz, .ipuz or .xml (Crossword Compiler).", dir_okay=False),
+        typer.Option("--save", "-o", help="Save as a crossword file instead: .puz, .ipuz or .xml (Crossword Compiler).",
+                     dir_okay=False),
     ] = None,
     fmt: FormatOption = None,
 ) -> None:

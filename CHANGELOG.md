@@ -10,6 +10,7 @@ versions may include breaking changes.
 
 - `atlgames.views` (formerly the internal `atlgames.cli.views`) is now at the
   package level, as in nytimes-games.
+- Linted with ruff, in CI and as a pre-commit hook.
 
 ## 0.2.0 (2026-10-11)
 

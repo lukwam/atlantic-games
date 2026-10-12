@@ -53,7 +53,7 @@ cli = [
     "typer>=0.12",
     "tzdata; sys_platform == 'win32'",
 ]
-test = ["fastapi>=0.111", "ipuz", "puzpy", "pytest", "pyyaml>=6", "pytest-asyncio", "pytest-cov", "respx", "rich>=13", "typer>=0.12", "xmlschema", "mcp>=2.3"]
+test = ["fastapi>=0.111", "ipuz", "puzpy", "pytest", "pyyaml>=6", "pytest-asyncio", "pytest-cov", "respx", "rich>=13", "ruff", "typer>=0.12", "xmlschema", "mcp>=2.3"]
 
 [project.scripts]
 atlg = "atlgames.cli:main"
@@ -79,3 +79,12 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 markers = ["live: hits The Atlantic and Amuse Labs over the network (deselected by default)"]
 addopts = "-m 'not live'"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.isort]
+force-single-line = true

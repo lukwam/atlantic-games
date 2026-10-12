@@ -180,7 +180,8 @@ def test_check_crossword_answer(atl):
     wrong = data(call("check_crossword_answer", {"entry": "2-down", "guess": "TO"}))
     assert not wrong["correct"] and "answer" not in wrong and wrong["note"] == "The answer has 3 squares"
     assert data(call("check_crossword_answer", {"entry": "2 Down", "guess": "t-o-x"}))["answer"] == "TOX"
-    assert data(call("check_crossword_answer", {"entry": "3-Across", "guess": "BIN", "reveal": True}))["answer"] == "BOX"
+    revealed = data(call("check_crossword_answer", {"entry": "3-Across", "guess": "BIN", "reveal": True}))
+    assert revealed["answer"] == "BOX"
     assert "No entry" in error(call("check_crossword_answer", {"entry": "9-Across", "guess": "X"}))
 
 

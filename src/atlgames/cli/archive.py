@@ -19,8 +19,8 @@ from rich.progress import TimeRemainingColumn
 from atlgames import AtlanticGamesAuthenticationError
 from atlgames import AtlanticGamesClient
 from atlgames import AtlanticGamesError
-from atlgames import AtlanticGamesNotFoundError
 from atlgames import AtlanticGamesExportError
+from atlgames import AtlanticGamesNotFoundError
 from atlgames import __version__
 from atlgames import formats
 from atlgames.cli.dates import date_range

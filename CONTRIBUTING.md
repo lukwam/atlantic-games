@@ -28,6 +28,14 @@ The tests mock every service, so they run offline and don't need cookies.
 Each client test runs against both `AtlanticGamesClient` and
 `AsyncAtlanticGamesClient`.
 
+Lint with ruff, which CI also runs, or install the pre-commit hooks to run it
+on every commit:
+
+```bash
+ruff check
+pre-commit install
+```
+
 Run the API locally with auto-reload:
 
 ```bash
@@ -64,7 +72,7 @@ src/atlgames/
 tests/
     fixtures/        Trimmed captures of real responses; saved games and tokens are made up
 examples/            Small scripts built on the package, and an example API with a Dockerfile
-docs/                endpoints.md: the endpoints, schemas and quirks behind each game
+docs/                endpoints.md: the endpoints, limits and quirks behind each game
 ```
 
 ## How the client works
@@ -115,7 +123,8 @@ Set `ATLANTIC_COOKIES` to your `atljwt6` cookie to also check your saved games.
 3. Add tests that mock the responses with `respx`, using a trimmed fixture,
    and check the method against the real service before opening a pull
    request.
-4. Update the tables in `README.md` and add a line to `CHANGELOG.md`.
+4. Update the tables in `README.md`, note anything new about the endpoint in
+   `docs/endpoints.md`, and add a line to `CHANGELOG.md`.
 
 ## Pull requests
 

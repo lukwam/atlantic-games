@@ -221,7 +221,8 @@ def profiles_delete(name: str) -> None:
 
 def build_auth_app() -> typer.Typer:
     """Return a new `auth` command group."""
-    app = typer.Typer(help=f"Log in with your Atlantic cookies (or set {COOKIES_ENV}) and check them.", no_args_is_help=True)
+    app = typer.Typer(help=f"Log in with your Atlantic cookies (or set {COOKIES_ENV}) and check them.",
+                      no_args_is_help=True)
     app.command("login")(login)
     app.command("status")(status)
     app.command("logout")(logout)
