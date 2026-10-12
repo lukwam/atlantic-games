@@ -3,7 +3,6 @@
 The Atlantic has no stats endpoint, so stats are computed from your saved
 games (see atlgames.stats). Crossword progress comes from Amuse Labs.
 """
-import dataclasses
 import datetime
 import enum
 from collections.abc import Iterable
@@ -111,7 +110,7 @@ def stats(
         return emit(data, fmt, table)
 
     if game == Game.bracket_city:
-        data = dataclasses.asdict(bracket)
+        data = views.stats_view(bracket)
 
         def table(data):
             yield key_value_table({
@@ -128,7 +127,7 @@ def stats(
 
         return emit(data, fmt, table)
 
-    data = dataclasses.asdict(rabbit)
+    data = views.stats_view(rabbit)
 
     def rabbithole_table(data):
         yield key_value_table({
@@ -215,8 +214,7 @@ def history_bracket_city(start: FromOption = None, end: ToOption = None, fmt: Fo
     first, last = date_window(start, end, "bracket-city")
     client = state.client()
     days = [d for d in client.bracket_city_dates() if first.isoformat() <= d <= last.isoformat()]
-    saved = {s.gameDate: s for s in client.game_states([("bracket-city", d, "v1") for d in days])}
-    rows = [views.bracket_city_result(d, saved.get(d)) for d in reversed(days)]
+    rows = views.bracket_city_results(days, client.game_states([("bracket-city", d, "v1") for d in days]))
 
     def table(data):
         t = Table(title=f"Bracket City {first} to {last}", title_justify="left", header_style="bold")
@@ -242,8 +240,7 @@ def history_rabbithole(start: FromOption = None, end: ToOption = None, fmt: Form
     first, last = date_window(start, end, "rabbithole")
     client = state.client()
     puzzles = client.rabbithole_puzzles(first.isoformat(), last.isoformat())
-    saved = {s.gameId: s for s in client.game_states([("rabbithole", p.date, p.id) for p in puzzles])}
-    rows = [views.rabbithole_result(p, saved.get(p.id)) for p in puzzles]
+    rows = views.rabbithole_results(puzzles, client.game_states([("rabbithole", p.date, p.id) for p in puzzles]))
 
     def table(data):
         t = Table(title=f"Rabbithole {first} to {last}", title_justify="left", header_style="bold")

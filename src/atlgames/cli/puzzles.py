@@ -115,16 +115,16 @@ def bracket_city(
     def table(data):
         yield Text(f"Bracket City {data['date']}" + (f" by {data['author']}" if data.get("author") else ""),
                    style="bold")
-        yield Text(f"{data['clues']} clues, nested {data['depth']} deep", style="dim")
+        yield Text(f"{data['clue_count']} clues, nested {data['depth']} deep", style="dim")
         yield Text()
         yield bracket_text(data["puzzle"])
-        if "clue_list" in data:
+        if "clues" in data:
             t = Table(title="Clues", title_justify="left", header_style="bold", box=None)
             t.add_column("#", justify="right")
             t.add_column("Clue")
             if answers:
                 t.add_column("Answer", style="green")
-            for clue in data["clue_list"]:
+            for clue in data["clues"]:
                 cell = Text("  " * (clue["depth"] - 1)) + bracket_text(clue["clue"], clue["depth"])
                 t.add_row(str(clue["number"]), cell, *([clue["answer"]] if answers else []))
             yield Text()
@@ -284,16 +284,16 @@ def rabbithole(puzzle: RabbitholeArgument = None, answers: AnswersOption = False
     def table(data):
         yield Text(f"Rabbithole {data['date']} (#{data['id']})"
                    + (f" by {data['byline']}" if data.get("byline") else ""), style="bold")
-        if "first_question" in data:
-            yield Text(f"{data['questions']} questions, each leading to the next. The first:", style="dim")
+        if not answers:
+            yield Text(f"{data['question_count']} questions, each leading to the next. The first:", style="dim")
             yield Text()
-            yield Text(data["first_question"])
+            yield Text(data["questions"][0]["question"] if data["questions"] else "")
             return
         t = Table(header_style="bold", show_lines=True)
         t.add_column("#", justify="right")
         t.add_column("Question")
         t.add_column("Answer", style="green")
-        for q in data["question_list"]:
+        for q in data["questions"]:
             t.add_row(str(q["number"]), q["question"], q["answer"])
         yield t
         if data.get("article"):
@@ -375,9 +375,7 @@ def stacks(
 
 def games(fmt: FormatOption = None) -> None:
     """List the games on The Atlantic's games hub."""
-    data = [{"slug": g.slug, "name": g.name, "author": g.author, "archive": g.hasArchive,
-             "featured": g.isFeaturedGame, "description": g.shortDescription, "url": g.url}
-            for g in state.client().games()]
+    data = [views.game_row(g) for g in state.client().games()]
 
     def table(data):
         t = Table(header_style="bold")

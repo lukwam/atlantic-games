@@ -154,10 +154,10 @@ def test_bracket_city_hides_the_answers_unless_asked(client):
     shown = run_json("bracket-city", "2026-10-04", "--answers")
 
     assert hidden == {"date": "2026-10-04", "author": "Ben Gross", "puzzle": BRACKET.initialPuzzle,
-                      "clues": 3, "depth": 2}
+                      "clue_count": 3, "depth": 2}
     assert shown["solution"] == "The black cat sat on the mat"
     assert shown["completion_url"] == "https://example.com/cats"
-    assert [c["answer"] for c in shown["clue_list"]] == ["black", "white", "mat"]
+    assert [c["answer"] for c in shown["clues"]] == ["black", "white", "mat"]
     client.bracket_city.assert_called_with("2026-10-04")
 
 
@@ -172,7 +172,7 @@ def test_bracket_city_today_asks_for_the_latest(client):
 def test_bracket_city_clues_dont_give_inner_answers_away(client):
     client.bracket_city.return_value = BRACKET
     data = run_json("bracket-city", "2026-10-04", "--clues")
-    assert [(c["number"], c["clue"], c["parent"]) for c in data["clue_list"]] == [
+    assert [(c["number"], c["clue"], c["parent"]) for c in data["clues"]] == [
         (1, "opposite of [#2]", None), (2, "color of snow", 1), (3, "floor covering", None)]
     assert "white" not in json.dumps(data) and "solution" not in data
 
@@ -186,9 +186,10 @@ def test_bracket_city_steps(client):
 
 def test_value_format_and_root_format(client):
     client.bracket_city.return_value = BRACKET
-    assert run("bracket-city", "2026-10-04", "-a", "-f", "value(solution,clues)").stdout == \
+    assert run("bracket-city", "2026-10-04", "-a", "-f", "value(solution,clue_count)").stdout == \
         "The black cat sat on the mat\t3\n"
-    assert run("-f", "csv", "bracket-city", "2026-10-04").stdout.splitlines()[0] == "date,author,puzzle,clues,depth"
+    header = run("-f", "csv", "bracket-city", "2026-10-04").stdout.splitlines()[0]
+    assert header == "date,author,puzzle,clue_count,depth"
 
 
 def test_crossword_hides_the_answers_unless_asked(client):
@@ -233,9 +234,10 @@ def test_rabbithole_shows_only_the_first_question(client):
     hidden = run_json("rabbithole")
     shown = run_json("rabbithole", "53", "--answers")
 
-    assert hidden["first_question"] == "What bird hoots?"
+    assert [q["question"] for q in hidden["questions"]] == ["What bird hoots?"]
+    assert "answer" not in hidden["questions"][0]
     assert "Athena" not in json.dumps(hidden) and "goddess" not in json.dumps(hidden)
-    assert [q["answer"] for q in shown["question_list"]] == ["Owl", "Athena"]
+    assert [q["answer"] for q in shown["questions"]] == ["Owl", "Athena"]
     assert shown["blurb"] == "All about owls."
     client.rabbithole.assert_called_with("53")
 
@@ -391,7 +393,7 @@ def test_config_and_profiles():
 def test_profile_format_is_the_default(client):
     client.bracket_city.return_value = BRACKET
     run("config", "set", "format", "json")
-    assert json.loads(run("bracket-city", "2026-10-04").stdout)["clues"] == 3
+    assert json.loads(run("bracket-city", "2026-10-04").stdout)["clue_count"] == 3
 
 
 def test_history_bracket_city(client):
