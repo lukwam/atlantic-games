@@ -128,19 +128,19 @@ def test_tools_are_listed_with_descriptions_and_annotations():
 
 def test_bracket_city_hides_answers_unless_asked(atl):
     hidden = data(call("bracket_city"))
-    assert hidden["text"] == BRACKET_CITY.initialPuzzle
-    assert hidden["available"] == [{"index": 1, "clue": "color of the sky", "depth": 2}]
+    assert hidden["puzzle"] == BRACKET_CITY.initialPuzzle
+    assert hidden["available"] == [{"number": 2, "clue": "color of the sky", "depth": 2}]
     assert "blue" not in str(hidden) and "orange" not in str(hidden) and "Well done" not in str(hidden)
     atl.bracket_city.assert_called_with(None)
 
-    partly = data(call("bracket_city", {"date": "2026-10-11", "solved": [1]}))
-    assert partly["text"] == "The [opposite of blue] moon rises" and partly["solved_count"] == 1
-    assert partly["available"] == [{"index": 0, "clue": "opposite of blue", "depth": 1}]
+    partly = data(call("bracket_city", {"date": "2026-10-11", "solved": [2]}))
+    assert partly["puzzle"] == "The [opposite of blue] moon rises" and partly["solved_count"] == 1
+    assert partly["available"] == [{"number": 1, "clue": "opposite of blue", "depth": 1}]
     assert data(call("bracket_city", {"solved": ["color of the sky"]}))["solved_count"] == 1
 
     shown = data(call("bracket_city", {"include_answers": True}))
-    assert [a["answer"] for a in shown["answers"]] == ["blue", "orange"]
-    assert shown["solved_text"] == "The orange moon rises" and "caption" not in shown
+    assert [c["answer"] for c in shown["clues"]] == ["orange", "blue"]
+    assert shown["solution"] == "The orange moon rises" and "caption" not in shown
     assert "No clue 7" in error(call("bracket_city", {"solved": [7]}))
 
 
@@ -148,26 +148,28 @@ def test_bracket_city_saved_progress(atl):
     atl.bracket_city_game.return_value = bracket_game("2026-10-11", "inProgress",
                                                       solvedExpressions=["color of the sky"])
     view = data(call("bracket_city", {"use_saved_progress": True}))
-    assert view["text"] == "The [opposite of blue] moon rises"
+    assert view["puzzle"] == "The [opposite of blue] moon rises"
     assert view["saved_game"] == {"progress": "inProgress", "wrong_guesses": 1, "peeks": 0, "mega_peeks": 0}
     atl.bracket_city_game.assert_called_with("2026-10-11")
 
 
 def test_bracket_city_check_and_peek(atl):
-    assert data(call("check_bracket_city_answer", {"clue": 1, "guess": "red"})) == {
-        "date": "2026-10-11", "index": 1, "clue": "color of the sky", "correct": False}
+    assert data(call("check_bracket_city_answer", {"clue": 2, "guess": "red"})) == {
+        "date": "2026-10-11", "number": 2, "clue": "color of the sky", "correct": False}
     right = data(call("check_bracket_city_answer", {"clue": "[color of the sky]", "guess": " Blue!"}))
     assert right["correct"] and right["answer"] == "blue"
-    peek = data(call("bracket_city_peek", {"clue": "0"}))
+    peek = data(call("bracket_city_peek", {"clue": "1"}))
     assert peek["first_letter"] == "o" and peek["length"] == 6 and "answer" not in peek
-    assert data(call("bracket_city_peek", {"clue": 0, "full": True}))["answer"] == "orange"
+    assert data(call("bracket_city_peek", {"clue": 1, "full": True}))["answer"] == "orange"
+    assert "numbered 1 to 2" in error(call("bracket_city_peek", {"clue": 0}))
     assert "No clue 'nope'" in error(call("bracket_city_peek", {"clue": "nope"}))
 
 
 def test_crossword_entries(atl):
     hidden = data(call("crossword", {"date": "2026-10-11"}))
     assert hidden["grid"] == ["...", ".#.", "..."]
-    assert hidden["author"] == "Ann Author" and hidden["editor"] == "Ed Editor"
+    assert hidden["constructor"] == "Ann Author" and hidden["editor"] == "Ed Editor"
+    assert hidden["id"] == "atlantic_20261011" and hidden["size"] == "3x3" and "clues" not in hidden
     assert hidden["entries"][0] == {"id": "1-Across", "direction": "Across", "clue": "Feline", "length": 3,
                                     "start": [0, 0], "crossings": ["1-Down", "2-Down"]}
     atl.crossword.assert_called_with(date="2026-10-11", series="daily")
@@ -190,7 +192,8 @@ def test_crossword_progress(atl):
     atl.crossword_play.return_value = CrosswordPlay(id="atlantic_20261011", playState=2, timeTaken=300,
                                                     nCorrectEntries=4, revealUsed=False)
     progress = data(call("crossword_progress"))
-    assert progress["started"] and progress["time_seconds"] == 300 and progress["correct_entries"] == 4
+    assert progress["status"] == "solved" and progress["seconds"] == 300 and progress["correct_entries"] == 4
+    assert progress["entries"] == 4 and progress["help"] == []
     atl.crossword_play.assert_called_with("atlantic_20261011", "daily")
 
 
@@ -216,18 +219,18 @@ def test_rabbithole_saved_progress_and_check(atl):
     assert view["saved_game"]["results"] == ["correct_first_try", "incorrect"]
 
     right = data(call("check_rabbithole_answer", {"question": 1, "guess": "uno flip"}))
-    assert right == {"puzzle_id": "53", "question": 1, "correct": True, "answer": "Uno",
+    assert right == {"id": "53", "question": 1, "correct": True, "answer": "Uno",
                      "next_question": "Uno's spin-off is named for what sport?"}
     assert data(call("check_rabbithole_answer", {"question": 3, "guess": "Double Eagle"}))["correct"]
     wrong = data(call("check_rabbithole_answer", {"question": 2, "guess": "tennis"}))
-    assert wrong == {"puzzle_id": "53", "question": 2, "correct": False}
+    assert wrong == {"id": "53", "question": 2, "correct": False}
     assert data(call("check_rabbithole_answer", {"question": 2, "guess": "x", "reveal": True}))["answer"] == "Golf"
     assert "questions 1 to 3" in error(call("check_rabbithole_answer", {"question": 4, "guess": "x"}))
 
 
 def test_rabbithole_archive_hides_answers(atl):
     atl.rabbithole_puzzles.return_value = [RABBITHOLE]
-    assert data(call("rabbithole_archive")) == [{"puzzle_id": "53", "date": "2026-10-09", "byline": "Drew Goins",
+    assert data(call("rabbithole_archive")) == [{"date": "2026-10-09", "id": "53", "byline": "Drew Goins",
                                                  "question_count": 3}]
     atl.rabbithole_puzzles.assert_called_with("2026-09-12", "2026-10-11")
     assert "after date_end" in error(call("rabbithole_archive", {"date_start": "2026-10-11",
@@ -243,7 +246,8 @@ def test_trivia_and_stacks(atl):
 
     puzzle = data(call("stacks", {"date": "2026-08-24"}))
     assert puzzle == {"date": "2026-08-24", "id": 433, "title": "", "words": ["AB"], "base": "--"}
-    assert data(call("stacks", {"date": "2026-08-24", "include_answers": True}))["rows"] == ["AB"]
+    shown = data(call("stacks", {"date": "2026-08-24", "include_answers": True}))
+    assert shown["board"] == ["AB"] and shown["drops"] == [{"word": "AB", "column": 1}]
 
 
 def test_stats_and_history_need_cookies(atl):
@@ -259,15 +263,20 @@ def test_stats_and_history(atl):
     assert stats["completed"] == 2 and stats["current_streak"] == 2 and stats["efficiency"] == 0.8
     assert stats["first_completed"] == "2026-10-10" and "completed_dates" not in stats
     atl.bracket_city_games.assert_called_with(None, "2026-10-11")
+    atl.bracket_city_dates.return_value = ["2026-10-09", "2026-10-10", "2026-10-11"]
     rows = data(call("bracket_city_history", {"date_start": "yesterday"}))
-    assert rows[0] == {"date": "2026-10-10", "progress": "complete", "clues_solved": 0, "wrong_guesses": 1,
-                       "peeks": 0, "mega_peeks": 0, "hints": 0, "keystrokes": 10, "minimum_keystrokes": 8,
-                       "efficiency": 0.8, "solved_on_the_day": True}
+    assert [r["date"] for r in rows] == ["2026-10-11", "2026-10-10"]
+    assert rows[1] == {"date": "2026-10-10", "status": "complete", "solved_clues": 0, "wrong_guesses": 1,
+                       "keystrokes": 10, "minimum_keystrokes": 8, "efficiency": 0.8, "peeks": 0, "hints": 0,
+                       "solved_on_the_day": True}
     atl.bracket_city_games.assert_called_with("2026-10-10", "2026-10-11")
 
     atl.rabbithole_games.return_value = [rabbithole_game(["correct_first_try"] * 3, "complete", 9)]
     assert data(call("rabbithole_stats"))["perfect"] == 1
-    assert data(call("rabbithole_history"))[0]["score"] == 9
+    atl.rabbithole_puzzles.return_value = [RABBITHOLE]
+    assert data(call("rabbithole_history")) == [{"date": "2026-10-09", "id": "53", "status": "complete",
+                                                 "score": 9, "max_score": 9,
+                                                 "results": ["correct_first_try"] * 3}]
 
 
 def test_errors_are_actionable(atl):

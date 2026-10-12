@@ -9,6 +9,7 @@ import typer
 from atlgames import AtlanticGamesAuthenticationError
 from atlgames import AtlanticGamesClient
 from atlgames import parse_cookies
+from atlgames import views
 from atlgames.auth import ENTITLEMENTS_COOKIE
 from atlgames.auth import SESSION_COOKIE
 from atlgames.auth import account_from_cookies
@@ -104,8 +105,7 @@ def status(fmt: FormatOption = None) -> None:
         if account is None:
             data["error"] = f"no {SESSION_COOKIE} cookie"
         else:
-            data.update(user_id=account.uuid, expires=account.expires_at.isoformat() if account.expires_at else None,
-                        premium_access=account.premium_access)
+            data.update(user_id=account.uuid, **views.account_view(account))
             if account.expired:
                 data["error"] = "the cookies have expired"
             else:

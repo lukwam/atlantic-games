@@ -58,7 +58,7 @@ src/atlgames/
     stats.py         Streaks and totals computed from saved games
     formats.py       Crossword export: .puz, .ipuz and Crossword Compiler .xml
     api.py           Optional FastAPI app and router (the "api" extra)
-    views.py         Plain data views of puzzles and saved games, for atlg's output formats
+    views.py         Plain data views of puzzles and saved games, shared by atlg and the MCP server
     mcp_server.py    Optional MCP server for AI agents (the "mcp" extra)
     cli/             Optional atlg command line (the "cli" extra)
         app.py       Root command, global options and error messages
@@ -74,6 +74,9 @@ tests/
 examples/            Small scripts built on the package, and an example API with a Dockerfile
 docs/                endpoints.md: the endpoints, limits and quirks behind each game
 ```
+
+Fixtures used by one test file live in that file; once a second file needs
+them, move them to `tests/conftest.py`.
 
 ## How the client works
 

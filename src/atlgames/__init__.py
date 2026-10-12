@@ -1,5 +1,5 @@
 """Unofficial client for The Atlantic's games."""
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from atlgames.auth import Account  # noqa: E402
 from atlgames.auth import parse_cookies  # noqa: E402

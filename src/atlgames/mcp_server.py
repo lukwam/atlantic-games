@@ -10,7 +10,6 @@ Runs locally over stdio. Cookies come from ATLANTIC_COOKIES or your atlg profile
 Every tool is read-only: the server only reads puzzles and saved games, and
 never saves game state.
 """
-import dataclasses
 import datetime
 import functools
 import logging
@@ -30,12 +29,10 @@ from atlgames import AtlanticGamesRateLimitError
 from atlgames import __version__
 from atlgames import formats
 from atlgames import stats as game_stats
+from atlgames import views
 from atlgames.models import EASTERN
-from atlgames.models import BracketCityGame
 from atlgames.models import BracketCityPuzzle
 from atlgames.models import CrosswordPuzzle
-from atlgames.models import RabbitholePuzzle
-from atlgames.models import TriviaArticle
 from atlgames.models import normalize_answer
 from atlgames.models import strip_html
 
@@ -181,47 +178,20 @@ def letters(text: str) -> str:
 # Bracket City
 
 
-def clue_index(puzzle: BracketCityPuzzle, clue: int | str) -> int:
-    """Return a clue's index from its index (as a number or digits) or its text."""
+def clue_number(puzzle: BracketCityPuzzle, clue: int | str) -> int:
+    """Return a clue's number (from 1) from its number (as a number or digits) or its text."""
     clues = puzzle.clues()
     if isinstance(clue, str) and clue.strip().isdigit():
         clue = int(clue.strip())
     if isinstance(clue, int):
-        if 0 <= clue < len(clues):
+        if 1 <= clue <= len(clues):
             return clue
-        raise ToolError(f"No clue {clue}: this puzzle's clues are numbered 0 to {len(clues) - 1}")
+        raise ToolError(f"No clue {clue}: this puzzle's clues are numbered 1 to {len(clues)}")
     text = clue.strip().strip("[]").strip().casefold()
     for c in clues:
         if text in (c.text.casefold(), c.raw.casefold()):
-            return c.index
-    raise ToolError(f"No clue {clue!r} in this puzzle; use a clue index from bracket_city")
-
-
-def bracket_city_view(puzzle: BracketCityPuzzle, solved: list[int | str], answers: bool,
-                      saved: BracketCityGame | None = None) -> dict[str, Any]:
-    clues = puzzle.clues()
-    done = {clue_index(puzzle, s) for s in solved}
-    if saved is not None:
-        texts = set(saved.data.solvedExpressions)
-        done.update(c.index for c in clues if c.text in texts)
-    done = sorted(done)
-    view: dict[str, Any] = {
-        "date": puzzle.puzzleDate, "author": puzzle.author, "text": puzzle.render(done),
-        "clue_count": len(clues), "solved_count": len(done),
-        "available": [{"index": c.index, "clue": c.text, "depth": c.depth} for c in puzzle.available(done)],
-    }
-    if saved is not None:
-        data = saved.data
-        view["saved_game"] = {"progress": saved.progress.value, "wrong_guesses": data.wrongGuesses,
-                              "peeks": len(data.peekedClues), "mega_peeks": len(data.megaPeekedClues)}
-    if len(done) == len(clues) or answers:
-        view["solved_text"] = puzzle.solved_text
-        view["completion_text"] = puzzle.completionText
-    if answers:
-        view["answers"] = [{"index": c.index, "clue": c.text, "answer": c.answer} for c in puzzle.steps()]
-        if not puzzle.caption_matches:
-            view["caption"] = puzzle.puzzleSolution
-    return view
+            return c.index + 1
+    raise ToolError(f"No clue {clue!r} in this puzzle; use a clue number from bracket_city")
 
 
 @tool()
@@ -234,29 +204,30 @@ async def bracket_city(
     """Get a Bracket City puzzle (daily from 2025-01-01; default the latest): the text with its
     nested [bracketed] clues and the clues that can be solved now (every clue inside them solved).
 
-    solved lists clues the user has already solved, by index or clue text; their answers are filled
-    into the text. use_saved_progress fills in the clues solved in the user's saved game (needs
-    cookies). The answers are only included with include_answers; to help without spoiling, use
-    check_bracket_city_answer or bracket_city_peek.
+    solved lists clues the user has already solved, by number (from 1) or clue text; their answers
+    are filled into the text. use_saved_progress fills in the clues solved in the user's saved game
+    (needs cookies). The answers are only included with include_answers; to help without spoiling,
+    use check_bracket_city_answer or bracket_city_peek.
     """
     async with client() as atl:
         puzzle = await atl.bracket_city(optional_day(date))
         saved = await atl.bracket_city_game(puzzle.puzzleDate) if use_saved_progress else None
-    view = bracket_city_view(puzzle, solved or [], include_answers, saved)
+    numbers = [clue_number(puzzle, clue) for clue in solved or []]
+    data = views.bracket_city_view(puzzle, include_answers, solved=numbers, saved=saved)
     if use_saved_progress and saved is None:
-        view["saved_game"] = None
-    return view
+        data["saved_game"] = None
+    return data
 
 
 @tool()
 async def check_bracket_city_answer(clue: int | str, guess: str, date: str | None = None) -> dict[str, Any]:
-    """Check a guess for one Bracket City clue (by index or clue text) without revealing the answer
+    """Check a guess for one Bracket City clue (by number or clue text) without revealing the answer
     unless it's right. Case, accents and punctuation are ignored. Default date: the latest puzzle.
     """
     async with client() as atl:
         puzzle = await atl.bracket_city(optional_day(date))
-    c = puzzle.clues()[clue_index(puzzle, clue)]
-    result: dict[str, Any] = {"date": puzzle.puzzleDate, "index": c.index, "clue": c.text,
+    c = puzzle.clues()[clue_number(puzzle, clue) - 1]
+    result: dict[str, Any] = {"date": puzzle.puzzleDate, "number": c.index + 1, "clue": c.text,
                               "correct": same_answer(guess, c.answer)}
     if result["correct"]:
         result["answer"] = c.answer
@@ -265,13 +236,13 @@ async def check_bracket_city_answer(clue: int | str, guess: str, date: str | Non
 
 @tool()
 async def bracket_city_peek(clue: int | str, date: str | None = None, full: bool = False) -> dict[str, Any]:
-    """Peek at one Bracket City clue (by index or clue text), like the game's peek: its first letter
+    """Peek at one Bracket City clue (by number or clue text), like the game's peek: its first letter
     and length, or with full (the game's mega peek) its whole answer. Default date: the latest puzzle.
     """
     async with client() as atl:
         puzzle = await atl.bracket_city(optional_day(date))
-    c = puzzle.clues()[clue_index(puzzle, clue)]
-    result = {"date": puzzle.puzzleDate, "index": c.index, "clue": c.text, "first_letter": c.answer[:1],
+    c = puzzle.clues()[clue_number(puzzle, clue) - 1]
+    result = {"date": puzzle.puzzleDate, "number": c.index + 1, "clue": c.text, "first_letter": c.answer[:1],
               "length": len(c.answer)}
     if full:
         result["answer"] = c.answer
@@ -285,26 +256,6 @@ async def get_crossword(atl, series: str, date: str | None, puzzle_id: str | Non
     if puzzle_id:
         return await atl.crossword(puzzle_id=puzzle_id, series=series)
     return await atl.crossword(date=optional_day(date), series=series)
-
-
-def crossword_view(puzzle: CrosswordPuzzle, series: str, answers: bool) -> dict[str, Any]:
-    squares = puzzle.squares()
-    rows = []
-    for r in range(puzzle.h):
-        row = squares[r * puzzle.w:(r + 1) * puzzle.w]
-        cells = ["#" if s.block else (s.answer if answers else ".") for s in row]
-        rows.append("".join(cells) if all(len(cell) == 1 for cell in cells) else cells)
-    entries = []
-    for entry in puzzle.entries():
-        item: dict[str, Any] = {"id": entry.id, "direction": entry.direction, "clue": strip_html(entry.clue),
-                                "length": len(entry.cells), "start": list(entry.coordinates[0]),
-                                "crossings": list(entry.crossings)}
-        if answers:
-            item["answer"] = entry.answer
-        entries.append(item)
-    return {"puzzle_id": puzzle.id, "series": series, "date": puzzle.date, "title": strip_html(puzzle.title),
-            "author": puzzle.constructor, "editor": puzzle.editor, "width": puzzle.w, "height": puzzle.h,
-            "grid": rows, "entries": entries}
 
 
 @tool()
@@ -323,7 +274,7 @@ async def crossword(
     """
     async with client() as atl:
         puzzle = await get_crossword(atl, series, date, puzzle_id)
-    return crossword_view(puzzle, series, include_answers)
+    return views.crossword_view(puzzle, include_answers, clues=False, entries=True)
 
 
 @tool()
@@ -344,7 +295,7 @@ async def check_crossword_answer(
     found = next((e for e in puzzle.entries() if e.id.lower() == wanted), None)
     if found is None:
         raise ToolError(f"No entry {entry!r} in crossword {puzzle.id}; use an id such as 1-Across")
-    result: dict[str, Any] = {"puzzle_id": puzzle.id, "entry": found.id, "clue": strip_html(found.clue),
+    result: dict[str, Any] = {"id": puzzle.id, "entry": found.id, "clue": strip_html(found.clue),
                               "correct": letters(guess) == letters(found.answer)}
     if len(letters(guess)) != len(found.cells) and not result["correct"]:
         result["note"] = f"The answer has {len(found.cells)} squares"
@@ -364,8 +315,7 @@ async def crossword_archive(
     async with client() as atl:
         listings = await atl.crosswords(series, optional_day(date_start), optional_day(date_end),
                                         limit=max(1, min(limit, 500)))
-    return [{"puzzle_id": p.puzzleId, "date": p.date, "title": strip_html(p.title), "author": p.author,
-             "size": f"{p.gridWidth}x{p.gridHeight}" if p.gridWidth else None} for p in listings]
+    return [views.crossword_listing_row(p) for p in listings]
 
 
 @tool()
@@ -379,42 +329,12 @@ async def crossword_progress(
     Needs cookies.
     """
     async with client() as atl:
-        if not puzzle_id:
-            puzzle_id = (await atl.crossword(date=optional_day(date), series=series)).id
-        play = await atl.crossword_play(puzzle_id, series)
-    updated = play.updated
-    return {"puzzle_id": puzzle_id, "series": series, "started": play.started, "play_state": play.playState,
-            "score": play.score, "time_seconds": play.timeTaken, "correct_entries": play.nCorrectEntries,
-            "check_used": play.checkUsed, "reveal_used": play.revealUsed, "hint_used": play.hintUsed,
-            "updated": updated.isoformat() if updated else None}
+        puzzle = await get_crossword(atl, series, date, puzzle_id)
+        play = await atl.crossword_play(puzzle.id, series)
+    return views.crossword_result(puzzle, play)
 
 
 # Rabbithole
-
-
-def rabbithole_view(puzzle: RabbitholePuzzle, answered: int, hints: bool, choices: bool,
-                    answers: bool) -> dict[str, Any]:
-    total = len(puzzle.questions)
-    answered = max(0, min(answered, total))
-    shown = total if answers else min(answered + 1, total)
-    questions = []
-    for number, q in enumerate(puzzle.questions[:shown], 1):
-        item: dict[str, Any] = {"number": number, "question": q.question}
-        if answers or number <= answered:
-            item["answer"] = q.canonicalAnswer
-        if hints:
-            item["hint"] = q.hint
-        if choices:
-            item["choices"] = sorted([*q.choices, q.canonicalAnswer], key=str.casefold)
-        questions.append(item)
-    view: dict[str, Any] = {"puzzle_id": puzzle.id, "date": puzzle.date, "byline": puzzle.byline,
-                            "question_count": total, "answered": answered, "max_score": puzzle.max_score,
-                            "questions": questions}
-    if answers or answered == total:
-        if puzzle.article:
-            view["article"] = {"title": strip_html(puzzle.article.title), "url": puzzle.article.url}
-        view["blurb"] = strip_html(puzzle.recirculationBlurb)
-    return view
 
 
 @tool()
@@ -440,11 +360,11 @@ async def rabbithole(
         saved = await atl.rabbithole_game(puzzle) if use_saved_progress else None
     if saved is not None:
         answered = len(saved.data.questionResults)
-    view = rabbithole_view(puzzle, answered, include_hints, include_choices, include_answers)
+    data = views.rabbithole_view(puzzle, include_answers, answered, include_hints, include_choices)
     if use_saved_progress:
-        view["saved_game"] = saved and {"progress": saved.progress.value, "score": saved.data.score,
+        data["saved_game"] = saved and {"progress": saved.progress.value, "score": saved.data.score,
                                         "results": saved.data.questionResults}
-    return view
+    return data
 
 
 @tool()
@@ -463,7 +383,7 @@ async def check_rabbithole_answer(
     if not 1 <= question <= len(puzzle.questions):
         raise ToolError(f"No question {question}: this puzzle has questions 1 to {len(puzzle.questions)}")
     q = puzzle.questions[question - 1]
-    result: dict[str, Any] = {"puzzle_id": puzzle.id, "question": question, "correct": q.accepts(guess)}
+    result: dict[str, Any] = {"id": puzzle.id, "question": question, "correct": q.accepts(guess)}
     if result["correct"] or reveal:
         result["answer"] = q.canonicalAnswer
     if result["correct"] and question < len(puzzle.questions):
@@ -479,29 +399,10 @@ async def rabbithole_archive(date_start: str | None = None, date_end: str | None
     first, last = window(date_start, date_end)
     async with client() as atl:
         puzzles = await atl.rabbithole_puzzles(first, last)
-    return [{"puzzle_id": p.id, "date": p.date, "byline": p.byline, "question_count": len(p.questions)}
-            for p in puzzles]
+    return [views.rabbithole_listing_row(p) for p in puzzles]
 
 
 # Trivia and Stacks (ended)
-
-
-def trivia_view(article: TriviaArticle, hints: bool, answers: bool) -> dict[str, Any]:
-    questions = []
-    for number, q in enumerate(article.questions, 1):
-        item: dict[str, Any] = {"number": number, "topic": q.topicText, "question": q.question}
-        if hints and q.hintText:
-            item["hint"] = strip_html(q.hintText)
-        if answers:
-            item["answer"] = q.canonicalAnswer
-            if q.subtext:
-                item["explanation"] = strip_html(q.subtext)
-            if q.relatedArticle:
-                item["related_article"] = {"title": strip_html(q.relatedArticle.title),
-                                           "url": q.relatedArticle.url}
-        questions.append(item)
-    return {"article": article.article_id, "date": article.date, "title": strip_html(article.title),
-            "url": article.url, "questions": questions}
 
 
 @tool()
@@ -513,7 +414,7 @@ async def trivia_archive(limit: int = 20) -> list[dict[str, Any]]:
     """
     async with client() as atl:
         articles = await atl.trivia_articles(limit=max(1, min(limit, 400)))
-    return [{"article": a.article_id, "date": a.date, "title": strip_html(a.title)} for a in articles]
+    return [views.trivia_listing_row(a) for a in articles]
 
 
 @tool()
@@ -527,7 +428,7 @@ async def trivia(article: str, include_hints: bool = False, include_answers: boo
         quiz = await atl.trivia(article)
     if not quiz.questions:
         raise ToolError(f"Article {quiz.article_id} has no trivia questions (daily quizzes start on 2026-03-13)")
-    return trivia_view(quiz, include_hints, include_answers)
+    return views.trivia_view(quiz, include_answers, include_hints)
 
 
 @tool()
@@ -540,7 +441,7 @@ async def check_trivia_answer(article: str, question: int, guess: str, reveal: b
     if not 1 <= question <= len(quiz.questions):
         raise ToolError(f"No question {question}: this quiz has {len(quiz.questions)} questions")
     q = quiz.questions[question - 1]
-    result: dict[str, Any] = {"article": quiz.article_id, "question": question, "correct": q.accepts(guess)}
+    result: dict[str, Any] = {"id": quiz.article_id, "question": question, "correct": q.accepts(guess)}
     if result["correct"] or reveal:
         result["answer"] = q.canonicalAnswer
     return result
@@ -552,16 +453,12 @@ async def stacks(date: str, include_answers: bool = False) -> dict[str, Any]:
     the base row ("-" is an empty column). Drop each word so its letters fall down their columns,
     making every row a word.
 
-    The solution (each word's column, in order, and the finished rows) is only included with include_answers.
+    The solution (each word's column, numbered from 1, in order, and the finished board) is only
+    included with include_answers.
     """
     async with client() as atl:
         puzzle = await atl.stacks(day(date).isoformat())
-    view: dict[str, Any] = {"date": puzzle.date, "id": puzzle.id, "title": puzzle.title,
-                            "words": puzzle.wordStrings, "base": puzzle.blackPos}
-    if include_answers:
-        view["drops"] = [{"word": d.word, "column": d.column} for d in puzzle.drops()]
-        view["rows"] = puzzle.rows()
-    return view
+    return views.stacks_view(puzzle, include_answers)
 
 
 @tool()
@@ -569,8 +466,7 @@ async def games() -> list[dict[str, Any]]:
     """List the games on The Atlantic's games hub, with descriptions and links."""
     async with client() as atl:
         hub = await atl.games()
-    return [{"name": g.name, "slug": g.slug, "description": strip_html(g.shortDescription or g.description),
-             "url": g.url, "author": g.author, "has_archive": g.hasArchive} for g in hub]
+    return [views.game_row(g) for g in hub]
 
 
 # The user's own data
@@ -585,40 +481,20 @@ async def account() -> dict[str, Any]:
         user = atl.account
     if user is None:
         return {"logged_in": False, "help": COOKIE_HELP}
-    return {"logged_in": not user.expired, "expired": user.expired,
-            "expires_at": user.expires_at.isoformat() if user.expires_at else None,
-            "premium_access": user.premium_access, "ad_free": user.ad_free}
-
-
-def bracket_city_row(game: BracketCityGame) -> dict[str, Any]:
-    data = game.data
-    efficiency = game.efficiency
-    return {"date": game.gameDate, "progress": game.progress.value, "clues_solved": len(data.solvedExpressions),
-            "wrong_guesses": data.wrongGuesses, "peeks": len(data.peekedClues),
-            "mega_peeks": len(data.megaPeekedClues), "hints": len(data.hintModeClues),
-            "keystrokes": data.totalKeystrokes, "minimum_keystrokes": data.minimumKeystrokes,
-            "efficiency": round(efficiency, 3) if efficiency is not None else None,
-            "solved_on_the_day": data.solvedOnPubDate}
+    return {"logged_in": not user.expired, **views.account_view(user)}
 
 
 @tool()
 async def bracket_city_history(date_start: str | None = None, date_end: str | None = None) -> list[dict[str, Any]]:
-    """Get the user's saved Bracket City games for a date range (default: the last 30 days): progress,
-    clues solved, wrong guesses, peeks, keystroke efficiency and whether it was solved on the day.
-    Dates without a saved game are left out. Needs cookies.
+    """Get the user's Bracket City results for a date range (default: the last 30 days), newest
+    first: status, clues solved, wrong guesses, keystrokes, help used and whether it was solved on the
+    day. Dates without a saved game are listed as not played. Needs cookies.
     """
     first, last = window(date_start, date_end)
     async with client() as atl:
+        dates = [d for d in await atl.bracket_city_dates() if first <= d <= last]
         played = await atl.bracket_city_games(first, last)
-    return [bracket_city_row(g) for g in played]
-
-
-def stats_dict(record) -> dict[str, Any]:
-    result = dataclasses.asdict(record)
-    for key, value in result.items():
-        if isinstance(value, float):
-            result[key] = round(value, 3)
-    return result
+    return views.bracket_city_results(dates, played)
 
 
 @tool()
@@ -630,24 +506,22 @@ async def bracket_city_stats(date_start: str | None = None, date_end: str | None
     first, last = window(date_start, date_end, days=None)
     async with client() as atl:
         played = await atl.bracket_city_games(first, last)
-    record = stats_dict(game_stats.bracket_city_stats(played, today=today()))
-    completed = record.pop("completed_dates")
-    record["first_completed"] = completed[0] if completed else None
-    record["last_completed"] = completed[-1] if completed else None
-    return {"date_start": first, "date_end": last, **record}
+    return {"date_start": first, "date_end": last,
+            **views.stats_view(game_stats.bracket_city_stats(played, today=today()))}
 
 
 @tool()
 async def rabbithole_history(date_start: str | None = None, date_end: str | None = None) -> list[dict[str, Any]]:
-    """Get the user's saved Rabbithole games for a date range (default: the last 30 days): progress,
-    score (out of 21) and each question's result (correct_first_try, correct_with_hint,
-    correct_with_choice or incorrect). Needs cookies.
+    """Get the user's Rabbithole results for a date range (default: the last 30 days), newest first:
+    status, score (out of 21) and each question's result (correct_first_try, correct_with_hint,
+    correct_with_choice or incorrect). Puzzles without a saved game are listed as not played. Needs
+    cookies.
     """
     first, last = window(date_start, date_end)
     async with client() as atl:
+        puzzles = await atl.rabbithole_puzzles(first, last)
         played = await atl.rabbithole_games(first, last)
-    return [{"date": g.gameDate, "puzzle_id": g.gameId, "progress": g.progress.value, "score": g.data.score,
-             "results": g.data.questionResults} for g in played]
+    return views.rabbithole_results(puzzles, played)
 
 
 @tool()
@@ -658,7 +532,7 @@ async def rabbithole_stats(date_start: str | None = None, date_end: str | None =
     first, last = window(date_start, date_end, days=None)
     async with client() as atl:
         played = await atl.rabbithole_games(first, last)
-    return {"date_start": first, "date_end": last, **stats_dict(game_stats.rabbithole_stats(played))}
+    return {"date_start": first, "date_end": last, **views.stats_view(game_stats.rabbithole_stats(played))}
 
 
 # Files
@@ -690,7 +564,7 @@ async def export_crossword(
     data = formats.export(puzzle, fmt)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(data)
-    return {"path": str(target.resolve()), "format": fmt, "bytes": len(data), "puzzle_id": puzzle.id,
+    return {"path": str(target.resolve()), "format": fmt, "bytes": len(data), "id": puzzle.id,
             "date": puzzle.date, "notes": formats.fidelity(puzzle, fmt)}
 
 

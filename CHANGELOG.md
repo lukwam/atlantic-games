@@ -4,6 +4,25 @@ All notable changes to this project. The project follows
 [Semantic Versioning](https://semver.org/); while it's below 1.0, minor
 versions may include breaking changes.
 
+## 0.4.0 (2026-10-12)
+
+### Changed
+
+- The MCP server builds every response from `atlgames.views`, as in
+  nytimes-games, so `atlg-mcp` and `atlg --format json` return the same
+  fields. This changes the MCP tools' responses: puzzle and article IDs are
+  `id` (not `puzzle_id` or `article`), Bracket City clues are numbered from
+  1 like Rabbithole and Trivia questions, the crossword's author is
+  `constructor`, Stacks columns are numbered from 1, and history tools list
+  dates without a saved game as not played.
+- `atlg --format json` output: Bracket City's clue count is `clue_count` and
+  its clue list `clues`; Rabbithole's question count is `question_count`,
+  and its questions are always `questions` (only the first, without
+  `--answers`), with the multiple choice options including the answer.
+  Crossword and Trivia titles, and game descriptions, have HTML removed.
+  `atlg stats` reports the first and last completed dates instead of the
+  full list, as the MCP server does.
+
 ## 0.3.0 (2026-10-12)
 
 ### Changed
