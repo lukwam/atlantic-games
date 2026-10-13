@@ -13,6 +13,15 @@ versions may include breaking changes.
   `ZoneInfoNotFoundError`. CI now installs the package alone and each extra
   alone, on Linux and Windows, and checks New York time without a system
   database. (#5)
+- The MCP server's `export_crossword` never replaces a file unless
+  `overwrite` is set. It checked for the file before fetching the puzzle, so
+  a file created in the meantime was overwritten anyway; the file is now
+  created exclusively, and symlinks are never followed. With `overwrite`,
+  the new file is written next to the old one and moved into place, so a
+  failed write keeps the old file. `atlg ... --save` replaces files the same
+  way. (#4)
+- `export_crossword` is marked destructive in its MCP annotations, since
+  `overwrite` replaces files. (#4)
 
 ## 0.4.0 (2026-10-12)
 

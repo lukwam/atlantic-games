@@ -22,6 +22,7 @@ from atlgames.cli.output import console
 from atlgames.cli.output import emit
 from atlgames.cli.state import date_arg
 from atlgames.cli.state import state
+from atlgames.files import write_file
 
 DateArgument = Annotated[
     str,
@@ -179,7 +180,7 @@ def save_crossword(puzzle, path: Path) -> None:
     except AtlanticGamesExportError as err:
         console.print(f"[red]Can't save this puzzle as .{fmt}:[/red] " + "; ".join(err.reasons))
         raise typer.Exit(1) from None
-    path.write_bytes(data)
+    write_file(path, data, overwrite=True)
     console.print(f"Saved [bold]{path}[/bold]")
     for note in formats.fidelity(puzzle, fmt):
         console.print(f"[dim]Note: {note}[/dim]")

@@ -30,6 +30,7 @@ from atlgames import __version__
 from atlgames import formats
 from atlgames import stats as game_stats
 from atlgames import views
+from atlgames.files import write_file
 from atlgames.models import EASTERN
 from atlgames.models import BracketCityPuzzle
 from atlgames.models import CrosswordPuzzle
@@ -69,7 +70,8 @@ COOKIE_HELP = ("They can run `atlg auth login` (with atljwt6 from a logged-in th
                "or set ATLANTIC_COOKIES in the MCP server's environment.")
 Series = Literal["daily", "inferno"]
 READ_ONLY = ToolAnnotations(read_only_hint=True, open_world_hint=True)
-WRITES_FILE = ToolAnnotations(read_only_hint=False, destructive_hint=False, open_world_hint=True)
+# Destructive: with overwrite, it replaces an existing file.
+WRITES_FILE = ToolAnnotations(read_only_hint=False, destructive_hint=True, open_world_hint=True)
 WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
 server = MCPServer(name="atlantic-games", version=__version__, instructions=INSTRUCTIONS)
@@ -562,8 +564,11 @@ async def export_crossword(
     async with client() as atl:
         puzzle = await get_crossword(atl, series, date, puzzle_id)
     data = formats.export(puzzle, fmt)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(data)
+    try:
+        write_file(target, data, overwrite)
+    except FileExistsError:
+        # Checked again here: the file may have been created while the puzzle was fetched.
+        raise ToolError(f"{target} already exists; set overwrite to replace it") from None
     return {"path": str(target.resolve()), "format": fmt, "bytes": len(data), "id": puzzle.id,
             "date": puzzle.date, "notes": formats.fidelity(puzzle, fmt)}
 
