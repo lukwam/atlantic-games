@@ -162,6 +162,9 @@ ERROR_CODES = frozenset({
 })
 
 
+_STATUS = re.compile(r"[1-5][0-9]{2}", re.ASCII)
+
+
 def _error_metadata(error: dict) -> tuple[int | None, str | None]:
     """Return a GraphQL error's HTTP status and safe code, either of which
     may be missing.
@@ -187,9 +190,11 @@ def _error_metadata(error: dict) -> tuple[int | None, str | None]:
         value = info.get("status")
         if value is None:
             continue
-        if isinstance(value, str) and value.isdigit():
+        # An HTTP status, as a number or three ASCII digits. isdigit() isn't
+        # enough: it accepts digits int() rejects, such as "²".
+        if isinstance(value, str) and _STATUS.fullmatch(value):
             value = int(value)
-        if not isinstance(value, int) or isinstance(value, bool):
+        if not isinstance(value, int) or isinstance(value, bool) or not 100 <= value <= 599:
             raise malformed(f"extensions.{key}.status")
         status = status or value
     code = ext.get("code")
