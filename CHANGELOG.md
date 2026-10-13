@@ -4,6 +4,22 @@ All notable changes to this project. The project follows
 [Semantic Versioning](https://semver.org/); while it's below 1.0, minor
 versions may include breaking changes.
 
+## 0.4.4 (2026-10-12)
+
+### Fixed
+
+- The temporary file used to replace a file with `overwrite` is private
+  (0600) from the moment it's created. In 0.4.3 it started out readable
+  under your umask and was made private just before the data was written,
+  so a reader that opened it in that moment could still read the data. A
+  new file's permissions now come from an empty file created and removed
+  to find what your umask allows. (#8)
+- A status in an error from The Atlantic's API must be an HTTP status, as a
+  number or three ASCII digits. Strings such as `"²"` or a 5000-digit number
+  passed the old digit check but couldn't be converted, so they raised
+  `ValueError` and the REST API answered 500; they now raise
+  `AtlanticGamesParseError`. (#9)
+
 ## 0.4.3 (2026-10-12)
 
 ### Fixed
