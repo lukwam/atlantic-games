@@ -57,6 +57,7 @@ src/atlgames/
     structure.py     Crossword entries and squares
     stats.py         Streaks and totals computed from saved games
     formats.py       Crossword export: .puz, .ipuz and Crossword Compiler .xml
+    files.py         Writing exported files without replacing them by accident
     api.py           Optional FastAPI app and router (the "api" extra)
     views.py         Plain data views of puzzles and saved games, shared by atlg and the MCP server
     mcp_server.py    Optional MCP server for AI agents (the "mcp" extra)

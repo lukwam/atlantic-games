@@ -39,9 +39,12 @@ classifiers = [
     "Framework :: AsyncIO",
     "Typing :: Typed",
 ]
+# The models work in New York time; tzdata supplies it where the system has no
+# time zone database (Windows, slim containers).
 dependencies = [
     "httpx>=0.27",
     "pydantic>=2.8",
+    "tzdata",
 ]
 
 [project.optional-dependencies]
@@ -51,7 +54,6 @@ cli = [
     "pyyaml>=6",
     "rich>=13",
     "typer>=0.12",
-    "tzdata; sys_platform == 'win32'",
 ]
 test = ["fastapi>=0.111", "ipuz", "puzpy", "pytest", "pyyaml>=6", "pytest-asyncio", "pytest-cov", "respx", "rich>=13", "ruff", "typer>=0.12", "xmlschema", "mcp>=2.3"]
 

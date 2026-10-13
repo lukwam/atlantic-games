@@ -122,7 +122,8 @@ def test_tools_are_listed_with_descriptions_and_annotations():
     for name, t in tools.items():
         assert t.description and len(t.description) > 40, name
         assert t.annotations.read_only_hint is (name != "export_crossword"), name
-    assert tools["export_crossword"].annotations.destructive_hint is False
+    # With overwrite, export_crossword can replace a file.
+    assert tools["export_crossword"].annotations.destructive_hint is True
     assert tools["crossword"].input_schema["properties"]["series"]["enum"] == ["daily", "inferno"]
 
 
@@ -283,6 +284,28 @@ def test_errors_are_actionable(atl):
     atl.crossword.side_effect = AtlanticGamesNotFoundError("No daily crossword for 1900-01-01")
     assert "Not found: No daily crossword" in error(call("crossword", {"date": "1900-01-01"}))
     assert "Invalid date" in error(call("bracket_city", {"date": "someday"}))
+
+
+def test_export_never_replaces_a_file_created_during_the_fetch(atl, tmp_path):
+    """overwrite=False holds when the file appears after the first check (#4)."""
+    path = tmp_path / "race.puz"
+
+    def created_meanwhile(*args, **kwargs):
+        path.write_bytes(b"USER_FILE_CREATED_DURING_FETCH")
+        return CROSSWORD
+
+    atl.crossword.side_effect = created_meanwhile
+    result = call("export_crossword", {"path": str(path), "date": "2026-10-11"})
+    assert result.is_error and "already exists" in result.content[0].text
+    assert path.read_bytes() == b"USER_FILE_CREATED_DURING_FETCH"
+
+
+def test_export_overwrite_replaces_the_file(atl, tmp_path):
+    path = tmp_path / "cw.puz"
+    path.write_bytes(b"old")
+    data(call("export_crossword", {"path": str(path), "overwrite": True}))
+    assert path.read_bytes()[2:14] == b"ACROSS&DOWN\0"
+    assert [p.name for p in tmp_path.iterdir()] == ["cw.puz"]
 
 
 def test_cookies_come_from_the_environment_then_the_profile(tmp_path, monkeypatch):
