@@ -17,7 +17,7 @@ def write_file(path: Path, data: bytes, overwrite: bool = False) -> Path:
     and moved into place, so a failed write leaves any existing file intact.
     A symlink at `path` is replaced by the new file, not followed, and a
     replaced file keeps its permissions. The temporary file is private
-    (0600) while it holds the data.
+    (0600) from the moment it's created.
 
     New files get the permissions the user's umask allows (0644 with the
     usual umask of 022, 0600 with 077), either way. The umask is never
@@ -34,25 +34,41 @@ def write_file(path: Path, data: bytes, overwrite: bool = False) -> Path:
             path.unlink(missing_ok=True)
             raise
         return path
-    # Created like this, the empty file gets the permissions the user's umask
-    # allows: note them for a new file, then make the file private before
-    # writing, so the content is never more readable than the final file.
+    # Private (0600) from the moment it's created: a reader can't open it
+    # before the data is in, and keep reading it after a later chmod.
     tmp = path.with_name(f".{path.name}.{secrets.token_hex(8)}.tmp")
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0), 0o666)
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0), 0o600)
     try:
         with os.fdopen(fd, "wb") as file:
-            allowed = stat.S_IMODE(os.fstat(file.fileno()).st_mode)
-            if os.name != "nt":  # Windows has no POSIX permissions to protect
-                os.fchmod(file.fileno(), 0o600)
             file.write(data)
         try:
             existing = os.lstat(path)
         except FileNotFoundError:
             existing = None
         # A replaced file keeps its permissions; a new one gets the umask's.
-        os.chmod(tmp, stat.S_IMODE(existing.st_mode) if existing and stat.S_ISREG(existing.st_mode) else allowed)
+        if existing and stat.S_ISREG(existing.st_mode):
+            mode = stat.S_IMODE(existing.st_mode)
+        else:
+            mode = _umask_mode(path.parent)
+        os.chmod(tmp, mode)
         os.replace(tmp, path)
     except BaseException:
         tmp.unlink(missing_ok=True)
         raise
     return path
+
+
+def _umask_mode(directory: Path) -> int:
+    """Return the permissions the user's umask gives a new file, without
+    reading or changing the umask (other threads may be creating files).
+
+    Found by creating an empty file in `directory` and removing it; it never
+    holds data.
+    """
+    probe = directory / f".{secrets.token_hex(8)}.mode"
+    fd = os.open(probe, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0), 0o666)
+    try:
+        return stat.S_IMODE(os.fstat(fd).st_mode)
+    finally:
+        os.close(fd)
+        probe.unlink()

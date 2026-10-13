@@ -142,3 +142,45 @@ print(seen, oct(stat.S_IMODE(path.stat().st_mode)))
     result = subprocess.run([sys.executable, "-c", script, str(tmp_path)],
                             capture_output=True, text=True, check=True)
     assert result.stdout.strip() == f"[('0o600', True)] {oct(final)}"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permissions")
+@pytest.mark.parametrize("umask,existing,final", [
+    (0o022, 0o600, 0o600),  # replacing a private file under the usual umask (#56)
+    (0o022, 0o644, 0o644),
+    (0o022, None, 0o644),
+    (0o077, None, 0o600),
+])
+def test_the_temporary_file_is_private_from_creation(tmp_path, umask, existing, final):
+    """The temporary file is 0600 the moment it's created, before any chmod, so
+    no one can open it early and keep reading. A new destination's mode comes
+    from an empty probe file, which is removed. In a subprocess, since the
+    umask is process-wide.
+    """
+    script = f"""
+import os, stat, sys
+from pathlib import Path
+from atlgames import files
+root = Path(sys.argv[1])
+path = root / "export.puz"
+if {existing!r} is not None:
+    path.write_bytes(b"old")
+    path.chmod({existing!r})
+created = []
+real_open = files.os.open
+def watch(target, flags, mode=0o777, *args, **kwargs):
+    fd = real_open(target, flags, mode, *args, **kwargs)
+    if flags & os.O_CREAT:
+        info = os.fstat(fd)
+        kind = "tmp" if str(target).endswith(".tmp") else "probe"
+        created.append((kind, oct(stat.S_IMODE(info.st_mode)), info.st_size))
+    return fd
+files.os.open = watch
+os.umask({umask})
+files.write_file(path, b"new synthetic private content", overwrite=True)
+print(created, oct(stat.S_IMODE(path.stat().st_mode)), sorted(p.name for p in root.iterdir()))
+"""
+    result = subprocess.run([sys.executable, "-c", script, str(tmp_path)],
+                            capture_output=True, text=True, check=True)
+    probe = [] if existing else [("probe", oct(final), 0)]
+    assert result.stdout.strip() == f"{[('tmp', '0o600', 0)] + probe} {oct(final)} ['export.puz']"
