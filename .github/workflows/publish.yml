@@ -26,6 +26,8 @@ jobs:
       - run: pip install -e ".[api,cli,mcp,test]" build
       - run: pytest
       - run: python -m build
+      - name: Check the source distribution runs its own tests
+        run: scripts/check_sdist.sh dist/*.tar.gz
       - uses: actions/upload-artifact@v7
         with:
           name: dist

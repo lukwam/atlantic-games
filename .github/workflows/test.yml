@@ -61,3 +61,16 @@ jobs:
         env:
           PYTHONTZPATH: ""
         run: python scripts/check_extra.py ${{ matrix.extra }}
+
+  # The source distribution must be complete: built here, it's extracted away
+  # from the checkout, builds its own wheel and runs its own offline tests.
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install build
+      - run: python -m build --sdist
+      - run: scripts/check_sdist.sh dist/*.tar.gz

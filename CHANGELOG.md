@@ -4,6 +4,17 @@ All notable changes to this project. The project follows
 [Semantic Versioning](https://semver.org/); while it's below 1.0, minor
 versions may include breaking changes.
 
+## Unreleased
+
+### Fixed
+
+- Source distributions include the whole test tree (`tests/__init__.py`,
+  `support.py`, `conftest.py` and the fixtures), the scripts the tests load,
+  and the docs and contributor files, so an extracted sdist runs its own
+  offline tests. CI and the publish workflow check that with
+  `scripts/check_sdist.sh`, which builds a wheel from the extracted sdist
+  and runs its tests away from the checkout. (#16)
+
 ## 0.4.4 (2026-10-12)
 
 ### Fixed

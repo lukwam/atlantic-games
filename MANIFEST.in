@@ -1,0 +1,8 @@
+# Source distributions can run their own offline tests, so they include the
+# whole test tree with its helpers and fixtures, the scripts the tests load,
+# and the docs and contributor files. Wheels contain only the package.
+graft tests
+graft scripts
+graft docs
+include CHANGELOG.md CONTRIBUTING.md
+global-exclude __pycache__ *.py[cod]
