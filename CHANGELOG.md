@@ -27,6 +27,12 @@ versions may include breaking changes.
   the same way, so an interrupted run leaves the previous complete manifest.
   A file that's on disk but missing from the manifest, as after an
   interrupted run, is added to the manifest as it is the next time. (#12)
+- Saving `config.ini`, which holds your cookies, is atomic. It used to be
+  truncated and rewritten in place, so a failed or interrupted save could
+  lose your profiles. The new contents go to a private (0600) temporary file
+  that replaces the config only once complete, and the config stays 0600
+  even if it had been made readable by others. `active_profile` is written
+  atomically too. (#17)
 
 ## 0.4.4 (2026-10-12)
 

@@ -184,3 +184,15 @@ print(created, oct(stat.S_IMODE(path.stat().st_mode)), sorted(p.name for p in ro
                             capture_output=True, text=True, check=True)
     probe = [] if existing else [("probe", oct(final), 0)]
     assert result.stdout.strip() == f"{[('tmp', '0o600', 0)] + probe} {oct(final)} ['export.puz']"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permissions")
+def test_mode_sets_the_permissions_either_way(tmp_path):
+    new = tmp_path / "new.ini"
+    write_file(new, b"secret", mode=0o600)
+    assert stat.S_IMODE(new.stat().st_mode) == 0o600
+    replaced = tmp_path / "replaced.ini"
+    replaced.write_bytes(b"old")
+    replaced.chmod(0o644)
+    write_file(replaced, b"secret", overwrite=True, mode=0o600)
+    assert stat.S_IMODE(replaced.stat().st_mode) == 0o600 and replaced.read_bytes() == b"secret"
