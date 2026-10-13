@@ -281,3 +281,50 @@ def test_malformed_graphql_envelopes_are_502s_and_tool_errors(mock, monkeypatch,
     result = asyncio.run(call())
     assert result.is_error and "expected format" in result.content[0].text
     assert MARKER not in result.content[0].text
+
+
+# Malformed metadata in a GraphQL error (#9) is a parse error, not
+# AttributeError or TypeError, and its values stay out of every message.
+METADATA = {
+    "http string": {"http": MARKER},
+    "response list": {"response": [MARKER]},
+    "status object": {"http": {"status": {"private": MARKER}}},
+    "code list": {"code": [MARKER]},
+    "code object": {"code": {"private": MARKER}},
+    "extensions list": [MARKER],
+}
+
+
+@pytest.mark.parametrize("extensions", METADATA.values(), ids=METADATA.keys())
+async def test_malformed_graphql_error_metadata_is_a_parse_error(api, mock, extensions):
+    mock.get(GRAPHQL_URL).respond(json={"errors": [{"message": MARKER, "extensions": extensions}]})
+    with pytest.raises(AtlanticGamesParseError, match="malformed extensions") as info:
+        await api("games")
+    assert MARKER not in str(info.value)
+
+
+@pytest.mark.parametrize("extensions", METADATA.values(), ids=METADATA.keys())
+def test_malformed_graphql_error_metadata_is_a_502_and_a_tool_error(mock, monkeypatch, caplog, extensions):
+    mock.get(GRAPHQL_URL).respond(json={"errors": [{"message": MARKER, "extensions": extensions}]})
+    response = TestClient(api.app).get("/rabbithole/53")
+    assert response.status_code == 502 and MARKER not in response.text
+
+    monkeypatch.setattr(mcp_server, "client", lambda: AsyncAtlanticGamesClient(backoff=0))
+
+    async def call():
+        async with Client(mcp_server.server) as client:
+            return await client.call_tool("rabbithole", {"puzzle_id": "53"})
+
+    with caplog.at_level(logging.DEBUG):
+        result = asyncio.run(call())
+    assert result.is_error and "expected format" in result.content[0].text
+    assert MARKER not in result.content[0].text and MARKER not in caplog.text
+
+
+async def test_well_formed_graphql_error_metadata_still_works(api, mock):
+    """Absent or null metadata, string statuses and unknown string codes are fine."""
+    mock.get(GRAPHQL_URL).respond(json={"errors": [
+        {"message": "a"}, {"message": "b", "extensions": None},
+        {"message": "c", "extensions": {"http": None, "response": {"status": "400"}, "code": "SOMETHING_NEW"}}]})
+    with pytest.raises(AtlanticGamesGraphQLError, match=r"3 error\(s\) \(OTHER, HTTP 400\)"):
+        await api("games")
