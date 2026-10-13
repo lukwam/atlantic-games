@@ -5,7 +5,7 @@ import stat
 from pathlib import Path
 
 
-def write_file(path: Path, data: bytes, overwrite: bool = False) -> Path:
+def write_file(path: Path, data: bytes, overwrite: bool = False, mode: int | None = None) -> Path:
     """Write `data` to `path`, creating its directory, and return the path.
 
     Without `overwrite`, the file is created exclusively: if anything exists
@@ -21,15 +21,20 @@ def write_file(path: Path, data: bytes, overwrite: bool = False) -> Path:
 
     New files get the permissions the user's umask allows (0644 with the
     usual umask of 022, 0600 with 077), either way. The umask is never
-    changed, since other threads may be creating files.
+    changed, since other threads may be creating files. Pass `mode` to set
+    the file's permissions instead, such as 0o600 for a file with secrets;
+    then a replaced file doesn't keep its own.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     if not overwrite:
         # O_EXCL fails if the path exists, and doesn't follow symlinks.
-        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0), 0o666)
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0),
+                     0o666 if mode is None else mode)
         try:
             with os.fdopen(fd, "wb") as file:
                 file.write(data)
+            if mode is not None:
+                os.chmod(path, mode)
         except BaseException:
             path.unlink(missing_ok=True)
             raise
@@ -46,10 +51,11 @@ def write_file(path: Path, data: bytes, overwrite: bool = False) -> Path:
         except FileNotFoundError:
             existing = None
         # A replaced file keeps its permissions; a new one gets the umask's.
-        if existing and stat.S_ISREG(existing.st_mode):
-            mode = stat.S_IMODE(existing.st_mode)
-        else:
-            mode = _umask_mode(path.parent)
+        if mode is None:
+            if existing and stat.S_ISREG(existing.st_mode):
+                mode = stat.S_IMODE(existing.st_mode)
+            else:
+                mode = _umask_mode(path.parent)
         os.chmod(tmp, mode)
         os.replace(tmp, path)
     except BaseException:

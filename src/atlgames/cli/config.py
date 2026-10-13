@@ -4,8 +4,12 @@ Each profile is a section in ``config.ini``. The active profile name is stored
 in ``active_profile`` next to it, like gcloud's named configurations.
 """
 import configparser
+import io
+import locale
 import os
 from pathlib import Path
+
+from atlgames.files import write_file
 
 DEFAULT_PROFILE = "default"
 KEYS = {
@@ -46,7 +50,7 @@ class Config:
     def activate(self, profile: str) -> None:
         """Make a profile the active one."""
         self._ensure_directory()
-        self.active_path.write_text(profile + "\n")
+        write_file(self.active_path, (profile + "\n").encode(locale.getpreferredencoding(False)), overwrite=True)
 
     def profiles(self) -> list[str]:
         """Return the names of all profiles with settings."""
@@ -89,12 +93,19 @@ class Config:
         return True
 
     def save(self) -> None:
-        """Write the config file, readable only by the current user."""
+        """Write the config file, readable only by the current user (0600; on
+        Windows, the folder's own permissions apply instead).
+
+        The new contents go to a private temporary file that replaces the
+        config only once it's complete, so a failed save keeps the previous
+        config.
+        """
         self._ensure_directory()
-        fd = os.open(self.path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, "w") as file:
-            self.parser.write(file)
-        os.chmod(self.path, 0o600)
+        text = io.StringIO()
+        self.parser.write(text)
+        # The encoding open() uses by default, as when the config is read.
+        write_file(self.path, text.getvalue().encode(locale.getpreferredencoding(False)),
+                   overwrite=True, mode=0o600)
 
     def _ensure_directory(self) -> None:
         self.directory.mkdir(parents=True, exist_ok=True)

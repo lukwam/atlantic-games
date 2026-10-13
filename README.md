@@ -339,8 +339,11 @@ atlg stats -f json | jq .
 
 ### Profiles and settings
 
-Settings are saved per profile in `~/.config/atlg/config.ini` (readable only
-by you), similar to gcloud configurations:
+Settings are saved per profile in `~/.config/atlg/config.ini`, similar to
+gcloud configurations. On Linux and macOS the file is readable only by you
+(0600, in a 0700 folder); on Windows it relies on your user folder's
+permissions. Saves are atomic, so an interrupted save keeps the previous
+settings:
 
 ```bash
 atlg config set format json      # default output format for this profile
