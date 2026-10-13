@@ -9,6 +9,7 @@ import asyncio
 import datetime
 import email.utils
 import logging
+import math
 import re
 import time
 from dataclasses import dataclass
@@ -32,6 +33,12 @@ GRAPHQL_URL = "https://graphql.theatlantic.com/"
 #: The Atlantic's public GraphQL key, from its own games pages.
 GRAPHQL_API_KEY = "JakhyMEXwa9odtB8gBxFI63ITyKqDGkn7ciGVIJf"
 RETRY_STATUSES = (429, 500, 502, 503, 504)
+#: The longest the client's own exponential backoff waits between retries.
+BACKOFF_CAP = 60
+#: The longest Retry-After the client waits for. A server that asks for
+#: longer gets no early retry: the error is raised at once, with its
+#: `retry_after`, so the caller can decide when to try again.
+RETRY_AFTER_LIMIT = 300
 _MUTATION = re.compile(r"\s*mutation\b")
 
 
@@ -80,31 +87,48 @@ class Settings:
     backoff: float = 0.5
 
 
+def _utcnow() -> datetime.datetime:
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
 def _retry_after(response: httpx.Response) -> float | None:
+    """Return the seconds a response's Retry-After asks to wait (seconds or
+    an HTTP date), or None if it's absent or malformed."""
     value = response.headers.get("Retry-After")
     if not value:
         return None
     try:
-        return max(0.0, float(value))
+        seconds = float(value)
     except ValueError:
         pass
+    else:
+        return max(0.0, seconds) if math.isfinite(seconds) else None
     try:
         when = email.utils.parsedate_to_datetime(value)
-        return max(0.0, (when - datetime.datetime.now(datetime.timezone.utc)).total_seconds())
-    except (TypeError, ValueError):
+        return max(0.0, (when - _utcnow()).total_seconds())
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
 def _delay(settings: Settings, attempt: int, response: httpx.Response | None) -> float:
-    wait = settings.backoff * (2 ** attempt)
+    """The wait before the next attempt: the exponential backoff (capped at
+    BACKOFF_CAP), or the response's Retry-After when that's longer."""
+    wait = min(settings.backoff * (2 ** attempt), BACKOFF_CAP)
     after = _retry_after(response) if response is not None else None
-    return min(max(wait, after or 0), 60)
+    return max(wait, after or 0)
 
 
 def _should_retry(settings: Settings, attempt: int, response: httpx.Response | None) -> bool:
     if attempt >= settings.retries:
         return False
-    return response is None or response.status_code in RETRY_STATUSES
+    if response is None:
+        return True
+    if response.status_code not in RETRY_STATUSES:
+        return False
+    # Never retry before the server said to: a longer wait than we're willing
+    # to make raises the error now instead.
+    after = _retry_after(response)
+    return after is None or after <= RETRY_AFTER_LIMIT
 
 
 def _build(settings: Settings, request: Request) -> dict:

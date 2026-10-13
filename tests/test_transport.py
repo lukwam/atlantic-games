@@ -135,16 +135,57 @@ def test_retry_after_formats():
     assert transport._retry_after(response("-4")) == 0
     assert transport._retry_after(response(None)) is None
     assert transport._retry_after(response("soon")) is None
-    later = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=30)
-    assert 25 < transport._retry_after(response(email.utils.format_datetime(later, usegmt=True))) <= 30
-    past = datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc)
-    assert transport._retry_after(response(email.utils.format_datetime(past, usegmt=True))) == 0
+    # Non-finite numbers fall back to the backoff instead of waiting forever.
+    for value in ("inf", "-inf", "nan", "1e999"):
+        assert transport._retry_after(response(value)) is None, value
 
 
-def test_delay_is_capped():
+def test_retry_after_dates_use_the_clock(monkeypatch):
+    now = datetime.datetime(2026, 10, 12, 12, 0, tzinfo=datetime.timezone.utc)
+    monkeypatch.setattr(transport, "_utcnow", lambda: now)
+
+    def response(when):
+        return httpx.Response(429, headers={"Retry-After": email.utils.format_datetime(when, usegmt=True)})
+    assert transport._retry_after(response(now + datetime.timedelta(seconds=30))) == 30
+    assert transport._retry_after(response(now + datetime.timedelta(hours=1))) == 3600
+    assert transport._retry_after(response(now - datetime.timedelta(days=1))) == 0
+
+
+def test_the_backoff_is_capped_but_retry_after_is_not():
     config = settings(backoff=10)
-    assert transport._delay(config, 5, None) == 60
-    assert transport._delay(config, 0, httpx.Response(429, headers={"Retry-After": "3600"})) == 60
+    assert transport._delay(config, 5, None) == transport.BACKOFF_CAP == 60
+    # A Retry-After within the limit is honored in full, beyond the backoff cap.
+    assert transport._delay(config, 0, httpx.Response(429, headers={"Retry-After": "120"})) == 120
+    assert transport._delay(config, 0, httpx.Response(429, headers={"Retry-After": "300"})) == 300
+
+
+async def test_retry_after_up_to_the_limit_is_waited_for(kind, mock, sleeps):
+    route = mock.get(URL).mock(side_effect=[
+        httpx.Response(429, headers={"Retry-After": str(transport.RETRY_AFTER_LIMIT)}),
+        httpx.Response(503, headers={"Retry-After": "120"}), httpx.Response(200, json={"ok": True})])
+    assert await run(kind, get(Request(URL))) == {"ok": True}
+    assert route.call_count == 3 and sleeps == [300.0, 120.0]
+
+
+@pytest.mark.parametrize("status,error", [(429, AtlanticGamesRateLimitError), (503, AtlanticGamesHTTPError)])
+async def test_a_longer_retry_after_raises_at_once_instead_of_retrying_early(kind, mock, sleeps, status, error):
+    """Never retry sooner than the server asked (#14): past the limit, the
+    error is raised without waiting, with the requested wait."""
+    route = mock.get(URL).mock(return_value=httpx.Response(status, headers={"Retry-After": "3600"}))
+    with pytest.raises(error) as info:
+        await run(kind, get(Request(URL)))
+    assert route.call_count == 1 and sleeps == []
+    assert info.value.status_code == status
+    if status == 429:
+        assert info.value.retry_after == 3600
+
+
+async def test_malformed_retry_after_falls_back_to_the_backoff(kind, mock, sleeps):
+    route = mock.get(URL).mock(side_effect=[
+        httpx.Response(429, headers={"Retry-After": "soon"}), httpx.Response(429, headers={"Retry-After": "inf"}),
+        httpx.Response(200, json={"ok": True})])
+    assert await run(kind, get(Request(URL))) == {"ok": True}
+    assert route.call_count == 3 and sleeps == [0.5, 1.0]
 
 
 async def test_text_json_and_headers(kind, mock):
