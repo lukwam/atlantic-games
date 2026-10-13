@@ -4,6 +4,16 @@ All notable changes to this project. The project follows
 [Semantic Versioning](https://semver.org/); while it's below 1.0, minor
 versions may include breaking changes.
 
+## Unreleased
+
+### Fixed
+
+- The package installs `tzdata` on every platform. Without a system time
+  zone database (Windows, slim containers), `import atlgames` failed with
+  `ZoneInfoNotFoundError`. CI now installs the package alone and each extra
+  alone, on Linux and Windows, and checks New York time without a system
+  database. (#5)
+
 ## 0.4.0 (2026-10-12)
 
 ### Changed

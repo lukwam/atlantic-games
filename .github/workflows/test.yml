@@ -40,3 +40,24 @@ jobs:
           json.dump({'schemaVersion': 1, 'label': 'coverage', 'message': f'{percent:.0f}%', 'color': color}, open('coverage-badge.json', 'w'))
           "
           scripts/publish_badges.sh coverage-badge.json
+
+  # Each extra installed alone must work without a system time zone database,
+  # which Windows and slim containers don't have. The test job installs every
+  # extra at once, which can hide a missing dependency.
+  extras:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        extra: [core, cli, mcp]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install "${{ matrix.extra == 'core' && '.' || format('.[{0}]', matrix.extra) }}"
+      - name: Import without a system time zone database
+        env:
+          PYTHONTZPATH: ""
+        run: python scripts/check_extra.py ${{ matrix.extra }}
