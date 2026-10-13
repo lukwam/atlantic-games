@@ -6,6 +6,7 @@ so new fields from The Atlantic or Amuse Labs don't break validation.
 """
 import datetime
 import difflib
+import functools
 import re
 import unicodedata
 from enum import Enum
@@ -40,10 +41,31 @@ class AtlanticModel(BaseModel):
 Model = TypeVar("Model", bound=BaseModel)
 
 
+@functools.cache
+def _field_names() -> frozenset[str]:
+    """The field names and aliases of every model defined in this module."""
+    names = set()
+    for value in list(globals().values()):
+        if isinstance(value, type) and issubclass(value, BaseModel) and value.__module__ == __name__:
+            for name, info in value.model_fields.items():
+                names.add(name)
+                names.update(alias for alias in (info.alias, info.validation_alias) if isinstance(alias, str))
+    return frozenset(names)
+
+
+def _safe_location(loc: tuple) -> str:
+    """A validation error's location, keeping list indexes and the models'
+    own field names. Anything else, such as a dictionary key taken from the
+    response, becomes `*`."""
+    return ".".join(str(part) if isinstance(part, int) or part in _field_names() else "*"
+                    for part in loc) or "top level"
+
+
 def describe_errors(error: ValidationError, limit: int = 3) -> str:
     """Return where and how validation failed, as field paths and error
-    types (such as `puzzleDate: missing`), never the values themselves."""
-    problems = [f"{'.'.join(str(part) for part in e['loc']) or 'top level'}: {e['type']}"
+    types (such as `puzzleDate: missing`), never the values themselves or keys
+    taken from the response."""
+    problems = [f"{_safe_location(e['loc'])}: {e['type']}"
                 for e in error.errors(include_url=False, include_input=False, include_context=False)]
     more = f" and {len(problems) - limit} more" if len(problems) > limit else ""
     return "; ".join(problems[:limit]) + more

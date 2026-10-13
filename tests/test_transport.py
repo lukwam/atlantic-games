@@ -201,13 +201,13 @@ VALIDATION = {"errors": [{"message": "Cannot query field \"nosuchfield\" on type
 
 @pytest.mark.parametrize("status,body,request_kwargs,error,message,code", [
     (200, NOT_FOUND, {"not_found": "No game nope"}, AtlanticGamesNotFoundError, "No game nope", 404),
-    (200, NOT_FOUND, {}, AtlanticGamesNotFoundError, "404: Not Found", 404),
+    (200, NOT_FOUND, {}, AtlanticGamesNotFoundError, r"found nothing \(INTERNAL_SERVER_ERROR, HTTP 404\)", 404),
     (200, {"errors": [{"message": "No Puzzle matches the given query."}]}, {}, AtlanticGamesNotFoundError,
-     "No Puzzle matches", 404),
+     r"found nothing \(no details\)", 404),
     # The Atlantic answers requests for your data without a login with "Bad request".
     (200, BAD_REQUEST, {"auth": True}, AtlanticGamesAuthenticationError, "atljwt6 cookie", 401),
-    (200, BAD_REQUEST, {}, AtlanticGamesGraphQLError, "Bad request", 400),
-    (400, VALIDATION, {"auth": True}, AtlanticGamesGraphQLError, "Cannot query field", None),
+    (200, BAD_REQUEST, {}, AtlanticGamesGraphQLError, r"1 error\(s\) \(BAD_REQUEST, HTTP 400\)", 400),
+    (400, VALIDATION, {"auth": True}, AtlanticGamesGraphQLError, "GRAPHQL_VALIDATION_FAILED", None),
     (200, {"errors": [{"message": "x", "extensions": {"response": {"status": 403}}}]}, {"auth": True},
      AtlanticGamesAuthenticationError, "missing or expired", 401),
 ])

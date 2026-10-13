@@ -1,6 +1,8 @@
 """write_file: no-clobber creation and safe replacement."""
 import os
 import stat
+import subprocess
+import sys
 
 import pytest
 
@@ -56,11 +58,26 @@ def test_overwrite_replaces_the_file_and_keeps_its_permissions(tmp_path):
     assert [p.name for p in tmp_path.iterdir()] == ["puzzle.puz"]
 
 
-def test_overwrite_creates_new_files_readable(tmp_path):
-    path = tmp_path / "puzzle.puz"
-    write_file(path, b"new", overwrite=True)
-    if os.name != "nt":
-        assert stat.S_IMODE(path.stat().st_mode) == 0o644
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permissions")
+@pytest.mark.parametrize("umask,mode", [(0o077, 0o600), (0o022, 0o644)])
+def test_new_files_follow_the_umask_either_way(tmp_path, umask, mode):
+    """Neither branch makes a new file more readable than the umask allows (#46).
+
+    In a subprocess, since the umask is process-wide.
+    """
+    script = f"""
+import os, stat, sys
+from pathlib import Path
+from atlgames.files import write_file
+os.umask({umask})
+for overwrite in (False, True):
+    path = Path(sys.argv[1]) / f"new-{{overwrite}}.puz"
+    write_file(path, b"synthetic progress", overwrite=overwrite)
+    print(oct(stat.S_IMODE(path.stat().st_mode)))
+"""
+    result = subprocess.run([sys.executable, "-c", script, str(tmp_path)],
+                            capture_output=True, text=True, check=True)
+    assert result.stdout.split() == [oct(mode), oct(mode)]
 
 
 def test_overwrite_failure_keeps_the_previous_file(tmp_path, monkeypatch):
