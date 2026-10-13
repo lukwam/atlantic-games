@@ -18,6 +18,7 @@ from fastapi.testclient import TestClient
 from mcp import Client
 
 from atlgames import AsyncAtlanticGamesClient
+from atlgames import AtlanticGamesGraphQLError
 from atlgames import AtlanticGamesParseError
 from atlgames import api
 from atlgames import mcp_server
@@ -144,3 +145,139 @@ def test_live_check_keeps_safe_messages(live_check):
         assert False, "31 dailies"
 
     assert "31 dailies" in live_check.run("Check", failed_assertion)["detail"]
+
+
+# Keys taken from the response can be private too (#3 follow-up): a
+# dictionary key in the response appears in the error's field path.
+KEY_MARKER_BODY = {"puzzleDate": "2025-01-01", "initialPuzzle": "x", "puzzleSolution": "x",
+                   "solutions": {MARKER: []}}
+
+
+def test_field_paths_hide_keys_from_the_response():
+    with pytest.raises(AtlanticGamesParseError) as info:
+        parse(BracketCityPuzzle, KEY_MARKER_BODY)
+    assert str(info.value) == "The response didn't match BracketCityPuzzle: solutions.*: string_type"
+
+
+def test_field_paths_keep_field_names_and_indexes():
+    from atlgames.models import RabbitholePuzzle
+    body = {"id": "53", "publishedAt": "2026-10-09T10:00:00Z",
+            "questions": [{"id": "1", "questionText": "q", "canonicalAnswer": "a", "choices": [{}]}]}
+    with pytest.raises(AtlanticGamesParseError, match=r"questions\.0\.choices\.0: string_type"):
+        parse(RabbitholePuzzle, body)
+
+
+@pytest.fixture
+def key_marker(mock):
+    mock.get(BRACKET_CITY).respond(json=KEY_MARKER_BODY)
+    return mock
+
+
+async def test_clients_hide_keys_from_the_response(api, key_marker):
+    with pytest.raises(AtlanticGamesParseError, match=r"solutions\.\*: string_type") as info:
+        await api("bracket_city", "2025-01-01")
+    assert MARKER not in str(info.value)
+
+
+def test_rest_mcp_and_cli_hide_keys_from_the_response(key_marker, monkeypatch, tmp_path, caplog, capsys):
+    response = TestClient(api.app).get("/bracket-city/2025-01-01")
+    assert response.status_code == 502 and MARKER not in response.text
+
+    monkeypatch.setattr(mcp_server, "client", lambda: AsyncAtlanticGamesClient(backoff=0))
+
+    async def call():
+        async with Client(mcp_server.server) as client:
+            return await client.call_tool("bracket_city", {"date": "2025-01-01"})
+
+    with caplog.at_level(logging.DEBUG):
+        result = asyncio.run(call())
+    assert result.is_error and MARKER not in result.content[0].text and MARKER not in caplog.text
+
+    from atlgames.cli import app as cli_main
+    monkeypatch.setenv("ATLG_CONFIG_DIR", str(tmp_path))
+    monkeypatch.delenv("ATLANTIC_COOKIES", raising=False)
+    monkeypatch.setattr(sys, "argv", ["atlg", "bracket-city", "2025-01-01"])
+    with pytest.raises(SystemExit):
+        cli_main.main()
+    captured = capsys.readouterr()
+    assert "solutions.*" in captured.err
+    assert MARKER not in captured.out + captured.err
+
+
+def test_live_check_hides_keys_from_the_response(live_check, capsys):
+    def check():
+        parse(BracketCityPuzzle, KEY_MARKER_BODY)
+
+    result = live_check.run("Check", check)
+    assert not result["ok"] and "solutions.*" in result["detail"]
+    assert MARKER not in json.dumps(result) and MARKER not in capsys.readouterr().err
+
+
+# The Atlantic's GraphQL error messages can echo the request or its data
+# (#3 follow-up), so errors report only their codes and statuses.
+GRAPHQL_MARKER_BODY = {"errors": [{"message": MARKER, "extensions": {"code": "BAD_REQUEST",
+                                                                     "http": {"status": 400}}}]}
+
+
+async def test_graphql_errors_never_include_their_messages(api, mock):
+    mock.get(GRAPHQL_URL).respond(json=GRAPHQL_MARKER_BODY)
+    with pytest.raises(AtlanticGamesGraphQLError, match=r"\(BAD_REQUEST, HTTP 400\)") as info:
+        await api("games")
+    assert MARKER not in str(info.value)
+    assert info.value.errors == GRAPHQL_MARKER_BODY["errors"]  # still there for callers who need them
+    # Codes other than the standard ones could carry anything too.
+    mock.get(GRAPHQL_URL).respond(json={"errors": [{"message": MARKER, "extensions": {"code": MARKER}}]})
+    with pytest.raises(AtlanticGamesGraphQLError, match=r"\(OTHER\)") as info:
+        await api("games")
+    assert MARKER not in str(info.value)
+
+
+def test_graphql_messages_stay_out_of_the_live_check_and_mcp(mock, monkeypatch, capsys, caplog, live_check):
+    mock.get(GRAPHQL_URL).respond(json=GRAPHQL_MARKER_BODY)
+    from atlgames import AtlanticGamesClient
+    with AtlanticGamesClient(backoff=0) as client:
+        result = live_check.run("Games hub", client.games)
+    assert not result["ok"] and "BAD_REQUEST" in result["detail"]
+    assert MARKER not in json.dumps(result) and MARKER not in capsys.readouterr().err
+
+    monkeypatch.setattr(mcp_server, "client", lambda: AsyncAtlanticGamesClient(backoff=0))
+
+    async def call():
+        async with Client(mcp_server.server) as client:
+            return await client.call_tool("games", {})
+
+    with caplog.at_level(logging.DEBUG):
+        tool = asyncio.run(call())
+    assert tool.is_error and MARKER not in tool.content[0].text and MARKER not in caplog.text
+
+
+# Malformed GraphQL envelopes (#3 follow-up) are parse errors, not TypeError
+# or KeyError, and keep the REST API's 502.
+ENVELOPES = {"a list": [], "no operation": {"data": {}}, "null data": {"data": None},
+             "operation not an object": {"data": {"rabbitholePuzzle": [MARKER]}},
+             "not GraphQL": {"private": MARKER}}
+
+
+@pytest.mark.parametrize("body", ENVELOPES.values(), ids=ENVELOPES.keys())
+async def test_malformed_graphql_envelopes_are_parse_errors(api, mock, body):
+    mock.get(GRAPHQL_URL).respond(json=body)
+    with pytest.raises(AtlanticGamesParseError) as info:
+        await api("rabbithole", "53")
+    assert MARKER not in str(info.value)
+
+
+@pytest.mark.parametrize("body", ENVELOPES.values(), ids=ENVELOPES.keys())
+def test_malformed_graphql_envelopes_are_502s_and_tool_errors(mock, monkeypatch, body):
+    mock.get(GRAPHQL_URL).respond(json=body)
+    response = TestClient(api.app).get("/rabbithole/53")
+    assert response.status_code == 502 and MARKER not in response.text
+
+    monkeypatch.setattr(mcp_server, "client", lambda: AsyncAtlanticGamesClient(backoff=0))
+
+    async def call():
+        async with Client(mcp_server.server) as client:
+            return await client.call_tool("rabbithole", {"puzzle_id": "53"})
+
+    result = asyncio.run(call())
+    assert result.is_error and "expected format" in result.content[0].text
+    assert MARKER not in result.content[0].text

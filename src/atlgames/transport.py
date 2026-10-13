@@ -143,6 +143,8 @@ def _decode(request: Request, response: httpx.Response):
                 raise AtlanticGamesNotFoundError(request.not_found, status_code=status, response=response)
             raise AtlanticGamesAuthenticationError(message, status_code=status, response=response)
         raise AtlanticGamesHTTPError(message, status_code=status, response=response)
+    if request.kind == "graphql":
+        raise AtlanticGamesParseError("The Atlantic's API response wasn't a GraphQL result")
     if request.kind == "text":
         return response.text
     try:
@@ -151,26 +153,45 @@ def _decode(request: Request, response: httpx.Response):
         raise AtlanticGamesParseError(f"Expected JSON from {request.url}, got something else") from None
 
 
+# The standard GraphQL error codes (Apollo Server's); other codes are shown
+# as OTHER, since they could carry anything.
+ERROR_CODES = frozenset({
+    "BAD_REQUEST", "BAD_USER_INPUT", "FORBIDDEN", "GRAPHQL_PARSE_FAILED", "GRAPHQL_VALIDATION_FAILED",
+    "INTERNAL_SERVER_ERROR", "OPERATION_RESOLUTION_FAILURE", "PERSISTED_QUERY_NOT_FOUND",
+    "PERSISTED_QUERY_NOT_SUPPORTED", "UNAUTHENTICATED",
+})
+
+
 def _graphql_result(request: Request, body: dict, response: httpx.Response):
     errors = body.get("errors") or []
     if not errors:
-        return body.get("data")
-    statuses = set()
+        data = body.get("data")
+        if not isinstance(data, dict):
+            raise AtlanticGamesParseError("The Atlantic's API response had no data")
+        return data
+    if not isinstance(errors, list) or not all(isinstance(e, dict) for e in errors):
+        raise AtlanticGamesParseError("The Atlantic's API response had malformed errors")
+    statuses, codes = set(), set()
     for error in errors:
-        ext = error.get("extensions") or {}
+        ext = error.get("extensions") if isinstance(error.get("extensions"), dict) else {}
         status = (ext.get("http") or {}).get("status") or (ext.get("response") or {}).get("status")
-        if status:
+        if isinstance(status, int) or (isinstance(status, str) and status.isdigit()):
             statuses.add(int(status))
-    messages = "; ".join(str(e.get("message")) for e in errors)
+        if "code" in ext:
+            codes.add(ext["code"] if ext["code"] in ERROR_CODES else "OTHER")
+    # Messages are The Atlantic's own text, which can echo the request or its
+    # data, so they stay in `errors` and out of the error message.
+    summary = ", ".join([*sorted(codes), *(f"HTTP {s}" for s in sorted(statuses))]) or "no details"
     if 404 in statuses or any("No " in str(e.get("message")) and "matches" in str(e.get("message"))
                               for e in errors):
-        raise AtlanticGamesNotFoundError(request.not_found or messages, status_code=404, response=response)
+        raise AtlanticGamesNotFoundError(request.not_found or f"The Atlantic's API found nothing ({summary})",
+                                         status_code=404, response=response)
     if request.auth and (400 in statuses or 401 in statuses or 403 in statuses):
         raise AtlanticGamesAuthenticationError(
             "The Atlantic rejected the request for your data; the atljwt6 cookie is "
-            f"missing or expired ({messages})", status_code=401, response=response)
-    raise AtlanticGamesGraphQLError(messages, errors=errors, status_code=max(statuses, default=None),
-                                    response=response)
+            f"missing or expired ({summary})", status_code=401, response=response)
+    raise AtlanticGamesGraphQLError(f"The Atlantic's API returned {len(errors)} error(s) ({summary})",
+                                    errors=errors, status_code=max(statuses, default=None), response=response)
 
 
 def run_sync(client: httpx.Client, settings: Settings, operation: Operation):

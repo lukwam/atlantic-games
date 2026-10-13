@@ -49,7 +49,9 @@ class AtlanticGamesNotFoundError(AtlanticGamesHTTPError):
 class AtlanticGamesGraphQLError(AtlanticGamesHTTPError):
     """The Atlantic's GraphQL API returned errors.
 
-    `errors` is the list of GraphQL error objects.
+    The message has only the errors' codes and HTTP statuses. `errors` is the
+    list of GraphQL error objects, with The Atlantic's messages, which can
+    echo the request or its data, so take care where you show them.
     """
 
     def __init__(self, message: str, errors: list | None = None, **kwargs):

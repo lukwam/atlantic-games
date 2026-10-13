@@ -91,6 +91,23 @@ def _now() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
 
+def _field(data: Any, *path: str, kind: type = dict) -> Any:
+    """Return `data[path[0]][path[1]]...`, checking the response has each
+    step and that the result is a `kind`.
+
+    Raises AtlanticGamesParseError naming the path, never the response's
+    values, if it doesn't.
+    """
+    value = data
+    for depth, key in enumerate(path, 1):
+        if not isinstance(value, dict) or key not in value:
+            raise AtlanticGamesParseError(f"The response had no {'.'.join(path[:depth])}")
+        value = value[key]
+    if not isinstance(value, kind):
+        raise AtlanticGamesParseError(f"The response's {'.'.join(path)} wasn't a {kind.__name__}")
+    return value
+
+
 class _Operations:
     """Every request the clients make, as generators (see transport.py)."""
 
@@ -123,6 +140,8 @@ class _Operations:
         available until they're published.
         """
         dates = yield Request(f"{BRACKET_CITY_URL}/index.json")
+        if not isinstance(dates, list) or not all(isinstance(d, str) for d in dates):
+            raise AtlanticGamesParseError("Bracket City's list of dates wasn't a list of dates")
         return sorted(dates)
 
     def bracket_city(self, date: str | None = None) -> BracketCityPuzzle:
@@ -196,7 +215,8 @@ class _Operations:
                     token = yield from self._token()
                     continue
                 raise AtlanticGamesParseError(f"Amuse Labs' puzzle list failed: {body.get('errorMessage')}")
-            items = (body.get("seriesToPuzzleMetadata") or {}).get(series.value, [])
+            series_items = body.get("seriesToPuzzleMetadata") or {}
+            items = _field(series_items, series.value, kind=list) if series.value in series_items else []
             reached_start = False
             for item in items:
                 listing = parse(CrosswordListing, item, series=series.value)
@@ -285,13 +305,13 @@ class _Operations:
         published on weekdays, from 2026-08-12; IDs aren't in date order."""
         if puzzle_id is None:
             data = yield graphql("{rabbitholePuzzles(page:1,pageSize:1){results{%s}}}" % _RABBITHOLE_FIELDS)
-            results = data["rabbitholePuzzles"]["results"]
+            results = parse_list(RabbitholePuzzle, _field(data, "rabbitholePuzzles", "results", kind=object))
             if not results:
                 raise AtlanticGamesNotFoundError("No Rabbithole puzzles")
-            return parse(RabbitholePuzzle, results[0])
+            return results[0]
         data = yield graphql("query($id:ID!){rabbitholePuzzle(id:$id){%s}}" % _RABBITHOLE_FIELDS,
                              {"id": str(puzzle_id)}, not_found=f"No Rabbithole puzzle {puzzle_id}")
-        return parse(RabbitholePuzzle, data["rabbitholePuzzle"])
+        return parse(RabbitholePuzzle, _field(data, "rabbitholePuzzle", kind=object))
 
     def rabbithole_puzzles(self, date_start: str | None = None,
                            date_end: str | None = None) -> list[RabbitholePuzzle]:
@@ -303,9 +323,10 @@ class _Operations:
                 "query($page:Int,$start:String,$end:String){rabbitholePuzzles(page:$page,pageSize:100,"
                 "startDate:$start,endDate:$end){count next results{%s}}}" % _RABBITHOLE_FIELDS,
                 {"page": page, "start": date_start, "end": date_end})
-            result = data["rabbitholePuzzles"]
-            puzzles.extend(parse_list(RabbitholePuzzle, result["results"]))
-            if not result.get("next") or not result["results"]:
+            result = _field(data, "rabbitholePuzzles")
+            results = parse_list(RabbitholePuzzle, _field(result, "results", kind=object))
+            puzzles.extend(results)
+            if not result.get("next") or not results:
                 return puzzles
             page += 1
 
@@ -341,13 +362,18 @@ class _Operations:
                 "edges{node{... on Article{id title url datePublished}}}}}}"
                 % ("($after:String)" if after else "", TRIVIA_PAGE, ",after:$after" if after else ""),
                 {"after": after} if after else None)
-            river = data["collection"]["river"]
-            found.extend(parse(TriviaArticle, edge["node"]) for edge in river["edges"] if edge.get("node"))
+            river = _field(data, "collection", "river")
+            edges = _field(river, "edges", kind=list)
+            if not all(isinstance(edge, dict) for edge in edges):
+                raise AtlanticGamesParseError("The response's collection.river.edges weren't objects")
+            # Entries that aren't articles come back as empty or null nodes.
+            found.extend(parse(TriviaArticle, edge["node"]) for edge in edges if edge.get("node"))
             if limit and len(found) >= limit:
                 return found[:limit]
-            if not river["pageInfo"]["hasNextPage"]:
+            page_info = _field(river, "pageInfo")
+            if not page_info.get("hasNextPage"):
                 return found
-            after = river["pageInfo"]["endCursor"]
+            after = page_info.get("endCursor")
 
     def trivia(self, article: TriviaArticle | int | str) -> TriviaArticle:
         """Return a day's Trivia questions and answers, from its article ID,
@@ -358,10 +384,13 @@ class _Operations:
             "... on ArticleInlineTrivia{questions{id questionText canonicalAnswer validAnswers hintText "
             "subtext topicText targetAccuracy relatedArticle{id url title}}}}}}",
             {"id": article_id}, not_found=f"No article {article_id}")
-        node = data.get("article")
-        if not node:
+        if not data.get("article"):
             raise AtlanticGamesNotFoundError(f"No article {article_id}")
-        questions = [q for block in node.get("content") or []
+        node = _field(data, "article")
+        blocks = node.get("content") or []
+        if not isinstance(blocks, list) or not all(isinstance(block, dict) for block in blocks):
+            raise AtlanticGamesParseError("The response's article.content wasn't a list of blocks")
+        questions = [q for block in blocks
                      if block.get("__typename") == "ArticleInlineTrivia" for q in block.get("questions") or []]
         node = {k: v for k, v in node.items() if k != "content"}
         return parse(TriviaArticle, node, questions=questions)
@@ -392,13 +421,13 @@ class _Operations:
     def games(self) -> list[Game]:
         """Return the games on The Atlantic's games hub."""
         data = yield graphql("{gamesHub{%s}}" % _GAME_FIELDS)
-        return parse_list(Game, data["gamesHub"])
+        return parse_list(Game, _field(data, "gamesHub", kind=object))
 
     def game(self, slug: str) -> Game:
         """Return a game by slug, including some no longer on the hub."""
         data = yield graphql("query($slug:String!){game(slug:$slug){%s}}" % _GAME_FIELDS,
                              {"slug": slug}, not_found=f"No game {slug}")
-        return parse(Game, data["game"])
+        return parse(Game, _field(data, "game", kind=object))
 
     # Saved games
 
@@ -425,9 +454,9 @@ class _Operations:
                     "query($items:[BatchGetGameStateItem!]!){batchGameStates(items:$items){"
                     "items{%s} unprocessedKeys{gameSlug gameDate gameId}}}" % _STATE_FIELDS,
                     {"items": pending}, auth=True)
-                result = data["batchGameStates"]
+                result = _field(data, "batchGameStates")
                 fetched = _now()
-                for item in result["items"]:
+                for item in _field(result, "items", kind=list):
                     slug = item.get("gameSlug") if isinstance(item, dict) else None
                     states.append(parse(STATE_MODELS.get(slug, GameState), item, fetched_at=fetched))
                 pending = result.get("unprocessedKeys") or []

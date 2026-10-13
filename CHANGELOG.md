@@ -4,6 +4,26 @@ All notable changes to this project. The project follows
 [Semantic Versioning](https://semver.org/); while it's below 1.0, minor
 versions may include breaking changes.
 
+## 0.4.2 (2026-10-12)
+
+### Fixed
+
+- `AtlanticGamesParseError` messages no longer include dictionary keys taken
+  from the response, which could be private too. Field paths keep the
+  models' own field names and list indexes, and show anything else as `*`,
+  as in `solutions.*: string_type`. (#3)
+- `AtlanticGamesGraphQLError` and the other errors from The Atlantic's API
+  no longer include its error messages, which can echo the request or its
+  data; they name the standard GraphQL error codes and HTTP statuses
+  instead. The messages are still in the exception's `errors`. (#3)
+- Malformed responses from The Atlantic's API, such as a missing `data` or
+  operation, raise `AtlanticGamesParseError` instead of `TypeError` or
+  `KeyError`, so the REST API answers 502 instead of 500. (#3)
+- A crossword exported with `overwrite` (or saved with `atlg ... --save`) to
+  a new file got 0644 permissions even under a stricter umask, such as 077.
+  New files now get the permissions your umask allows with or without
+  `overwrite`, and a replaced file keeps its own. (#4)
+
 ## 0.4.1 (2026-10-12)
 
 ### Fixed
