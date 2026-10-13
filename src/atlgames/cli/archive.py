@@ -30,6 +30,7 @@ from atlgames.cli.output import err_console
 from atlgames.cli.output import key_value_table
 from atlgames.cli.state import date_arg
 from atlgames.cli.state import state
+from atlgames.files import write_file
 
 
 class ArchiveGame(str, enum.Enum):
@@ -140,7 +141,8 @@ def archive(
         archive_days(items, directory, file_format, overwrite, delay, manifest, result,
                      Progress(*columns, console=err_console, transient=True), game)
     finally:
-        manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+        # Atomic, so an interrupted run leaves the previous complete manifest.
+        write_file(manifest_path, (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode(), overwrite=True)
 
     def table(data):
         yield key_value_table({
@@ -168,6 +170,11 @@ def archive_days(items, directory: Path, file_format: str, overwrite: bool, dela
         for day, stem, fetch in items:
             path = directory / f"{stem}.{file_format}"
             if path.exists() and not overwrite:
+                # A file without a manifest entry, such as one saved by a run
+                # interrupted before its manifest was, is recorded as it is.
+                if path.name not in manifest["files"]:
+                    manifest["files"][path.name] = {"date": day, "retrieved_at": None,
+                                                    "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
                 result["skipped"] += 1
                 progress.advance(task)
                 continue
@@ -199,8 +206,9 @@ def archive_days(items, directory: Path, file_format: str, overwrite: bool, dela
 def save(path: Path, content: bytes, day: str, puzzle, manifest: dict, result: dict) -> None:
     """Write a file atomically and record it in the manifest.
 
-    If a puzzle has changed since it was saved, the previous file is kept in
-    revisions/ first.
+    If a puzzle has changed since it was saved, the previous file is copied
+    to revisions/ first. The file is only replaced once the new content is
+    completely written, so a failed write leaves it as it was.
     """
     now = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
     digest = hashlib.sha256(content).hexdigest()
@@ -209,16 +217,13 @@ def save(path: Path, content: bytes, day: str, puzzle, manifest: dict, result: d
     if path.exists():
         old_digest = hashlib.sha256(path.read_bytes()).hexdigest()
         if old_digest != digest:
-            fetched = (previous or {}).get("retrieved_at", "unknown").replace(":", "")
+            fetched = ((previous or {}).get("retrieved_at") or "unknown").replace(":", "")
             revision = path.parent / "revisions" / f"{path.stem}.{fetched}{path.suffix}"
-            revision.parent.mkdir(exist_ok=True)
-            path.replace(revision)
+            write_file(revision, path.read_bytes(), overwrite=True)
             revisions.append({"file": f"revisions/{revision.name}", "sha256": old_digest,
                               "retrieved_at": (previous or {}).get("retrieved_at")})
             result["updated"].append(day)
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_bytes(content)
-    tmp.replace(path)
+    write_file(path, content, overwrite=True)
     manifest["files"][path.name] = {
         "date": day,
         "puzzle_id": str(getattr(puzzle, "id", "") or "") or None,

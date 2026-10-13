@@ -20,6 +20,13 @@ versions may include breaking changes.
   5 minutes; a longer one raises the error at once, with `retry_after` set,
   instead of retrying early. Non-finite values such as `inf` fall back to
   the backoff. (#14)
+- `atlg archive --overwrite` keeps the saved puzzle if writing its update
+  fails. It used to move the file into `revisions/` first, so a failed write
+  left it missing; now the old file is copied to `revisions/` and replaced
+  only once the new one is completely written. `manifest.json` is written
+  the same way, so an interrupted run leaves the previous complete manifest.
+  A file that's on disk but missing from the manifest, as after an
+  interrupted run, is added to the manifest as it is the next time. (#12)
 
 ## 0.4.4 (2026-10-12)
 
