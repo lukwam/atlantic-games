@@ -140,8 +140,9 @@ in the description what you checked against the real services.
 
 Maintainers release by bumping `__version__` in `src/atlgames/__init__.py`,
 updating `CHANGELOG.md`, and pushing a `vX.Y.Z` tag. The publish workflow
-checks the tag matches the version, runs the tests and publishes to TestPyPI,
-then PyPI. To try a release first, run the "Publish to PyPI" workflow by hand
+checks the tag matches the version, runs the tests, checks the source
+distribution runs its own tests (`scripts/check_sdist.sh`) and publishes to
+TestPyPI, then PyPI. To try a release first, run the "Publish to PyPI" workflow by hand
 (Actions → Run workflow) on your branch: it publishes to
 [TestPyPI](https://test.pypi.org/project/atlantic-games/) only, and the tag
 skips that version there later.
