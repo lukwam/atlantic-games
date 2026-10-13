@@ -103,3 +103,42 @@ def test_overwrite_replaces_a_symlink_instead_of_following_it(tmp_path):
     write_file(link, b"new", overwrite=True)
     assert not link.is_symlink() and link.read_bytes() == b"new"
     assert target.read_bytes() == b"mine"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permissions")
+@pytest.mark.parametrize("umask,existing,final", [
+    (0o022, 0o600, 0o600),  # replacing a private file under the usual umask (#56)
+    (0o022, 0o644, 0o644),
+    (0o022, None, 0o644),
+    (0o077, None, 0o600),
+])
+def test_the_temporary_file_is_private_while_it_holds_the_data(tmp_path, umask, existing, final):
+    """With overwrite, the data is never more readable in the temporary file
+    than in the final one. Observed after the data is written and before the
+    final permissions are set, in a subprocess since the umask is process-wide.
+    """
+    script = f"""
+import os, stat, sys
+from pathlib import Path
+from atlgames import files
+root = Path(sys.argv[1])
+path = root / "export.puz"
+if {existing!r} is not None:
+    path.write_bytes(b"old")
+    path.chmod({existing!r})
+payload = b"new synthetic private content"
+seen = []
+lstat = files.os.lstat
+def observe(target, *args, **kwargs):
+    if Path(target) == path:
+        for tmp in root.glob(".export.puz.*.tmp"):
+            seen.append((oct(stat.S_IMODE(tmp.stat().st_mode)), tmp.read_bytes() == payload))
+    return lstat(target, *args, **kwargs)
+files.os.lstat = observe
+os.umask({umask})
+files.write_file(path, payload, overwrite=True)
+print(seen, oct(stat.S_IMODE(path.stat().st_mode)))
+"""
+    result = subprocess.run([sys.executable, "-c", script, str(tmp_path)],
+                            capture_output=True, text=True, check=True)
+    assert result.stdout.strip() == f"[('0o600', True)] {oct(final)}"

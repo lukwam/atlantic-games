@@ -162,6 +162,42 @@ ERROR_CODES = frozenset({
 })
 
 
+def _error_metadata(error: dict) -> tuple[int | None, str | None]:
+    """Return a GraphQL error's HTTP status and safe code, either of which
+    may be missing.
+
+    Raises AtlanticGamesParseError, naming the field but not its value, if
+    the metadata isn't the shape GraphQL servers send.
+    """
+    def malformed(field: str) -> AtlanticGamesParseError:
+        return AtlanticGamesParseError(f"The Atlantic's API error had a malformed {field}")
+
+    ext = error.get("extensions")
+    if ext is None:
+        return None, None
+    if not isinstance(ext, dict):
+        raise malformed("extensions")
+    status = None
+    for key in ("http", "response"):
+        info = ext.get(key)
+        if info is None:
+            continue
+        if not isinstance(info, dict):
+            raise malformed(f"extensions.{key}")
+        value = info.get("status")
+        if value is None:
+            continue
+        if isinstance(value, str) and value.isdigit():
+            value = int(value)
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise malformed(f"extensions.{key}.status")
+        status = status or value
+    code = ext.get("code")
+    if code is not None and not isinstance(code, str):
+        raise malformed("extensions.code")
+    return status, None if code is None else code if code in ERROR_CODES else "OTHER"
+
+
 def _graphql_result(request: Request, body: dict, response: httpx.Response):
     errors = body.get("errors") or []
     if not errors:
@@ -173,12 +209,11 @@ def _graphql_result(request: Request, body: dict, response: httpx.Response):
         raise AtlanticGamesParseError("The Atlantic's API response had malformed errors")
     statuses, codes = set(), set()
     for error in errors:
-        ext = error.get("extensions") if isinstance(error.get("extensions"), dict) else {}
-        status = (ext.get("http") or {}).get("status") or (ext.get("response") or {}).get("status")
-        if isinstance(status, int) or (isinstance(status, str) and status.isdigit()):
-            statuses.add(int(status))
-        if "code" in ext:
-            codes.add(ext["code"] if ext["code"] in ERROR_CODES else "OTHER")
+        status, code = _error_metadata(error)
+        if status:
+            statuses.add(status)
+        if code:
+            codes.add(code)
     # Messages are The Atlantic's own text, which can echo the request or its
     # data, so they stay in `errors` and out of the error message.
     summary = ", ".join([*sorted(codes), *(f"HTTP {s}" for s in sorted(statuses))]) or "no details"

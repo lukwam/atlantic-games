@@ -4,6 +4,20 @@ All notable changes to this project. The project follows
 [Semantic Versioning](https://semver.org/); while it's below 1.0, minor
 versions may include breaking changes.
 
+## 0.4.3 (2026-10-12)
+
+### Fixed
+
+- When a crossword export or `atlg ... --save` replaced a file with
+  `overwrite`, the new content sat in a temporary file readable under your
+  umask (often 0644) until it was moved into place, even when the file being
+  replaced was private. The temporary file is now private (0600) while it
+  holds the data; the final file's permissions are unchanged. (#8)
+- Malformed metadata in an error from The Atlantic's API, such as a status
+  or error code of the wrong type, raises `AtlanticGamesParseError` instead
+  of `AttributeError` or `TypeError`, so the REST API answers 502 instead of
+  500. (#9)
+
 ## 0.4.2 (2026-10-12)
 
 ### Fixed
