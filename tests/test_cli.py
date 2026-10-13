@@ -8,6 +8,7 @@ import json
 import stat
 import sys
 import time
+from pathlib import Path
 from unittest import mock
 
 import httpx
@@ -488,6 +489,72 @@ def test_archive_keeps_revisions(client, tmp_path):
     assert run_json(*args, "--overwrite")["updated"] == ["2026-10-02"]
     revisions = list((out / "rabbithole" / "revisions").iterdir())
     assert len(revisions) == 1 and json.loads(revisions[0].read_text())["byline"] == "Drew Goins"
+
+
+ARCHIVE_ARGS = ["archive", "bracket-city", "--from", "2026-10-02", "--to", "2026-10-02", "--delay", "0",
+                "-f", "json"]
+
+
+def fail_replacing(monkeypatch, name):
+    """Make os.replace fail when it would replace the file called `name`."""
+    from atlgames import files
+    real = files.os.replace
+
+    def replace(src, dst):
+        if Path(dst).name == name:
+            raise OSError("disk full")
+        return real(src, dst)
+
+    monkeypatch.setattr(files.os, "replace", replace)
+
+
+def test_archive_failed_update_keeps_the_file_and_manifest(client, tmp_path, monkeypatch):
+    """A failed write never removes the saved puzzle or breaks the manifest (#12)."""
+    out = tmp_path / "archive"
+    client.bracket_city_dates.return_value = ["2026-10-02"]
+    client.bracket_city.return_value = BRACKET
+    run(*ARCHIVE_ARGS, "-o", str(out))
+    saved = (out / "bracket-city" / "2026-10-02.json").read_bytes()
+    manifest = (out / "bracket-city" / "manifest.json").read_text()
+
+    client.bracket_city.return_value = BRACKET.model_copy(update={"author": "Fixed"})
+    fail_replacing(monkeypatch, "2026-10-02.json")
+    assert run(*ARCHIVE_ARGS, "-o", str(out), "--overwrite").exit_code != 0
+    assert (out / "bracket-city" / "2026-10-02.json").read_bytes() == saved
+    assert json.loads((out / "bracket-city" / "manifest.json").read_text()) == json.loads(manifest)
+    leftovers = [p.name for p in (out / "bracket-city").rglob("*") if p.name.endswith(".tmp")]
+    assert leftovers == []
+
+
+def test_archive_failed_manifest_write_keeps_the_previous_manifest(client, tmp_path, monkeypatch):
+    out = tmp_path / "archive"
+    client.bracket_city_dates.return_value = ["2026-10-02"]
+    client.bracket_city.return_value = BRACKET
+    run(*ARCHIVE_ARGS, "-o", str(out))
+    manifest = (out / "bracket-city" / "manifest.json").read_text()
+
+    fail_replacing(monkeypatch, "manifest.json")
+    assert run(*ARCHIVE_ARGS, "-o", str(out), "--overwrite").exit_code != 0
+    assert (out / "bracket-city" / "manifest.json").read_text() == manifest
+
+
+def test_archive_records_files_missing_from_the_manifest(client, tmp_path):
+    """A file saved without a manifest entry, as by an interrupted run, is
+    recorded as it is on the next run, and gets a revision when it changes."""
+    out = tmp_path / "archive"
+    (out / "bracket-city").mkdir(parents=True)
+    (out / "bracket-city" / "2026-10-02.json").write_text("{}")
+    client.bracket_city_dates.return_value = ["2026-10-02"]
+    client.bracket_city.return_value = BRACKET
+
+    assert json.loads(run(*ARCHIVE_ARGS, "-o", str(out)).stdout)["skipped"] == 1
+    record = json.loads((out / "bracket-city" / "manifest.json").read_text())["files"]["2026-10-02.json"]
+    assert record == {"date": "2026-10-02", "retrieved_at": None,
+                      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"}
+    assert not client.bracket_city.called
+
+    assert json.loads(run(*ARCHIVE_ARGS, "-o", str(out), "--overwrite").stdout)["updated"] == ["2026-10-02"]
+    assert [p.name for p in (out / "bracket-city" / "revisions").iterdir()] == ["2026-10-02.unknown.json"]
 
 
 def test_archive_crosswords_as_puz(client, tmp_path):
