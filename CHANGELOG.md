@@ -14,6 +14,12 @@ versions may include breaking changes.
   offline tests. CI and the publish workflow check that with
   `scripts/check_sdist.sh`, which builds a wheel from the extracted sdist
   and runs its tests away from the checkout. (#16)
+- A server's `Retry-After` was capped at 60 seconds, so a longer wait
+  turned into an early retry. The 60-second cap now applies only to the
+  client's own exponential backoff. `Retry-After` is honored in full up to
+  5 minutes; a longer one raises the error at once, with `retry_after` set,
+  instead of retrying early. Non-finite values such as `inf` fall back to
+  the backoff. (#14)
 
 ## 0.4.4 (2026-10-12)
 
