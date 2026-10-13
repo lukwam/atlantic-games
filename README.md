@@ -200,7 +200,7 @@ else's.
 | `AtlanticGamesRateLimitError` | 429 after retrying; `retry_after` has the suggested wait |
 | `AtlanticGamesGraphQLError` | The Atlantic's API returned other errors |
 | `AtlanticGamesHTTPError` | Any other HTTP error (the base of the above) |
-| `AtlanticGamesParseError` | A page didn't have the expected data, e.g. Amuse Labs changed its format |
+| `AtlanticGamesParseError` | A response or page wasn't in the expected format, e.g. Amuse Labs changed its format; the message names the fields, never their values |
 | `AtlanticGamesExportError` | A crossword can't be saved in a file format |
 
 ```python

@@ -151,12 +151,14 @@ def atlantic_errors(fn):
         except AtlanticGamesRateLimitError as err:
             wait = f" Try again in {err.retry_after:g} seconds." if err.retry_after else " Try again later."
             raise ToolError("The Atlantic is rate limiting requests." + wait) from None
+        except AtlanticGamesParseError as err:
+            # The message names fields, never the response's values.
+            raise ToolError("The response wasn't in the expected format; The Atlantic or Amuse Labs may have "
+                            f"changed it. {err}") from None
         except AtlanticGamesGraphQLError as err:
             raise ToolError(f"The Atlantic's API returned an error: {err}") from None
         except AtlanticGamesHTTPError as err:
             raise ToolError(f"The Atlantic returned an error (HTTP {err.status_code or 'unknown'}).") from None
-        except AtlanticGamesParseError as err:
-            raise ToolError(f"Couldn't read the game data: {err}") from None
         except ValueError as err:
             # Cookie and argument errors; their messages never include cookie values.
             raise ToolError(str(err)) from None

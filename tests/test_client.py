@@ -9,7 +9,6 @@ import json
 
 import httpx
 import pytest
-import respx
 
 import atlgames
 from atlgames import AsyncAtlanticGamesClient
@@ -27,7 +26,6 @@ from atlgames.models import RabbitholeGame
 from atlgames.models import RabbitholePuzzle
 from atlgames.transport import GRAPHQL_URL
 from tests.support import USER_UUID
-from tests.support import Api
 from tests.support import b64json
 from tests.support import bracket_city_puzzle
 from tests.support import cookies
@@ -39,34 +37,6 @@ from tests.support import text
 BC = "https://d2gknrezp32xyk.cloudfront.net/puzzles"
 AMUSE = "https://cdn3.amuselabs.com/atlantic"
 STACKS = "https://stacks.games.theatlantic.com/"
-
-
-@pytest.fixture(params=["sync", "async"])
-def make(request):
-    """Make a sync or async client."""
-    return lambda **kwargs: Api(request.param, **kwargs)
-
-
-@pytest.fixture
-def api(make):
-    return make()
-
-
-@pytest.fixture
-def logged_in(make):
-    return make(cookies=cookies())
-
-
-@pytest.fixture
-def mock():
-    with respx.mock(assert_all_called=False) as router:
-        yield router
-    # The library is read-only: every request any client test makes must be a
-    # GET, and no GraphQL query may be a mutation.
-    for call in router.calls:
-        assert call.request.method == "GET", call.request
-        query = call.request.url.params.get("query", "")
-        assert not query.lstrip().startswith("mutation"), query
 
 
 class GraphQL:

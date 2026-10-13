@@ -19,7 +19,9 @@ import time
 import traceback
 import zoneinfo
 from collections.abc import Callable
+from pathlib import Path
 
+import httpx
 import ipuz
 import puz
 
@@ -147,13 +149,29 @@ def user_checks(client: AtlanticGamesClient) -> list[tuple[str, Callable[[], str
             ("Rabbithole game", rabbithole_game), ("Crossword play", crossword_play)]
 
 
+def describe(err: Exception) -> str:
+    """Describe a failure without risking response data, which can be the
+    user's saved games: failures end up in public issues.
+
+    The library's errors, httpx errors and the checks' own assertions have
+    messages known to be safe. Anything else is reported by type and where
+    it was raised.
+    """
+    if isinstance(err, (atlgames.AtlanticGamesError, httpx.HTTPError, AssertionError)):
+        return f"{type(err).__name__}: {err}"[:300]
+    frame = traceback.extract_tb(err.__traceback__)[-1]
+    return f"{type(err).__name__} in {frame.name} ({Path(frame.filename).name}:{frame.lineno})"
+
+
 def run(name: str, check: Callable[[], str]) -> dict:
     start = time.monotonic()
     try:
         detail, ok = check(), True
     except Exception as err:  # noqa: BLE001 - every failure is reported
-        detail, ok = f"{type(err).__name__}: {err}"[:300], False
-        traceback.print_exc()
+        detail, ok = describe(err), False
+        # The stack without exception messages, which could include response data.
+        print(f"{name} failed: {detail}", "".join(traceback.format_tb(err.__traceback__)),
+              sep="\n", file=sys.stderr)
     return {"name": name, "ok": ok, "detail": detail, "seconds": round(time.monotonic() - start, 2)}
 
 

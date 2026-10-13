@@ -38,6 +38,8 @@ from atlgames.models import RabbitholeGame
 from atlgames.models import RabbitholePuzzle
 from atlgames.models import StacksPuzzle
 from atlgames.models import TriviaArticle
+from atlgames.models import parse
+from atlgames.models import parse_list
 from atlgames.transport import Request
 from atlgames.transport import Settings
 from atlgames.transport import graphql
@@ -130,7 +132,7 @@ class _Operations:
             date = dates[-1]
         data = yield Request(f"{BRACKET_CITY_URL}/{_date(date).isoformat()}.json",
                              not_found=f"No Bracket City puzzle for {date}")
-        return BracketCityPuzzle(**data)
+        return parse(BracketCityPuzzle, data)
 
     def bracket_city_game(self, date: str) -> BracketCityGame | None:
         """Return your saved Bracket City game for a date, or None.
@@ -184,6 +186,8 @@ class _Operations:
             page_size = CROSSWORD_PAGE if limit is None else min(CROSSWORD_PAGE, limit - len(found) + 20)
             body = yield Request(f"{amuse.AMUSE_URL}/api/v1/puzzles", {
                 "loadToken": token, "series": series.value, "limit": page_size, "offset": offset})
+            if not isinstance(body, dict):
+                raise AtlanticGamesParseError("Amuse Labs' puzzle list wasn't a JSON object")
             if body.get("status") not in (0, None):
                 # A stale token: get a new one, once.
                 if (body.get("errorDetails") or {}).get("errorCode") == 84 and not refreshed:
@@ -195,7 +199,7 @@ class _Operations:
             items = (body.get("seriesToPuzzleMetadata") or {}).get(series.value, [])
             reached_start = False
             for item in items:
-                listing = CrosswordListing(**item, series=series.value)
+                listing = parse(CrosswordListing, item, series=series.value)
                 if date_end and listing.date and listing.date > date_end:
                     continue
                 if date_start and listing.date and listing.date < date_start:
@@ -219,7 +223,7 @@ class _Operations:
         html = yield Request(f"{amuse.AMUSE_URL}/crossword", {"id": puzzle_id, "set": series.value}, kind="text")
         params = yield from self._crossword_params(html, puzzle_id)
         data = yield from self._decode(params)
-        return CrosswordPuzzle(**data, series=series.value)
+        return parse(CrosswordPuzzle, data, series=series.value)
 
     def _crossword_id(self, series: CrosswordSeries, date: str | None):
         if date is None:
@@ -234,7 +238,7 @@ class _Operations:
             "publicationDateTime}}",
             {"series": series.value, "from": _eastern_midnight(day),
              "to": _eastern_midnight(day + datetime.timedelta(days=1))})
-        listings = [CrosswordListing(**item) for item in data.get("amuseLabsPuzzles") or []]
+        listings = parse_list(CrosswordListing, data.get("amuseLabsPuzzles") or [])
         matching = [item for item in listings if item.date == day.isoformat()]
         if not matching:
             raise AtlanticGamesNotFoundError(f"No {series.name} crossword for {day}")
@@ -270,7 +274,9 @@ class _Operations:
                              {"id": puzzle_id, "set": series.value, "uid": account.uuid}, kind="text")
         params = yield from self._crossword_params(html, puzzle_id)
         play = amuse.decode_field(params, "rawp") or {}
-        return CrosswordPlay(**{"id": puzzle_id, "series": series.value, **play})
+        if not isinstance(play, dict):
+            raise AtlanticGamesParseError("Amuse Labs' saved play wasn't a JSON object")
+        return parse(CrosswordPlay, {"id": puzzle_id, "series": series.value, **play})
 
     # Rabbithole
 
@@ -282,10 +288,10 @@ class _Operations:
             results = data["rabbitholePuzzles"]["results"]
             if not results:
                 raise AtlanticGamesNotFoundError("No Rabbithole puzzles")
-            return RabbitholePuzzle(**results[0])
+            return parse(RabbitholePuzzle, results[0])
         data = yield graphql("query($id:ID!){rabbitholePuzzle(id:$id){%s}}" % _RABBITHOLE_FIELDS,
                              {"id": str(puzzle_id)}, not_found=f"No Rabbithole puzzle {puzzle_id}")
-        return RabbitholePuzzle(**data["rabbitholePuzzle"])
+        return parse(RabbitholePuzzle, data["rabbitholePuzzle"])
 
     def rabbithole_puzzles(self, date_start: str | None = None,
                            date_end: str | None = None) -> list[RabbitholePuzzle]:
@@ -298,7 +304,7 @@ class _Operations:
                 "startDate:$start,endDate:$end){count next results{%s}}}" % _RABBITHOLE_FIELDS,
                 {"page": page, "start": date_start, "end": date_end})
             result = data["rabbitholePuzzles"]
-            puzzles.extend(RabbitholePuzzle(**p) for p in result["results"])
+            puzzles.extend(parse_list(RabbitholePuzzle, result["results"]))
             if not result.get("next") or not result["results"]:
                 return puzzles
             page += 1
@@ -336,7 +342,7 @@ class _Operations:
                 % ("($after:String)" if after else "", TRIVIA_PAGE, ",after:$after" if after else ""),
                 {"after": after} if after else None)
             river = data["collection"]["river"]
-            found.extend(TriviaArticle(**edge["node"]) for edge in river["edges"] if edge.get("node"))
+            found.extend(parse(TriviaArticle, edge["node"]) for edge in river["edges"] if edge.get("node"))
             if limit and len(found) >= limit:
                 return found[:limit]
             if not river["pageInfo"]["hasNextPage"]:
@@ -358,7 +364,7 @@ class _Operations:
         questions = [q for block in node.get("content") or []
                      if block.get("__typename") == "ArticleInlineTrivia" for q in block.get("questions") or []]
         node = {k: v for k, v in node.items() if k != "content"}
-        return TriviaArticle(**node, questions=questions)
+        return parse(TriviaArticle, node, questions=questions)
 
     # Stacks
 
@@ -369,7 +375,7 @@ class _Operations:
         if self._stacks is None:
             html = yield Request(stacks_game.STACKS_URL, {"view": "tnf"}, kind="text")
             js = yield Request(stacks_game.page_script_url(html), kind="text")
-            self._stacks = [StacksPuzzle(**puzzle, date=stacks_game.date_of(i))
+            self._stacks = [parse(StacksPuzzle, puzzle, date=stacks_game.date_of(i))
                             for i, puzzle in enumerate(stacks_game.puzzles_from_script(js))]
         return list(self._stacks)
 
@@ -386,13 +392,13 @@ class _Operations:
     def games(self) -> list[Game]:
         """Return the games on The Atlantic's games hub."""
         data = yield graphql("{gamesHub{%s}}" % _GAME_FIELDS)
-        return [Game(**game) for game in data["gamesHub"]]
+        return parse_list(Game, data["gamesHub"])
 
     def game(self, slug: str) -> Game:
         """Return a game by slug, including some no longer on the hub."""
         data = yield graphql("query($slug:String!){game(slug:$slug){%s}}" % _GAME_FIELDS,
                              {"slug": slug}, not_found=f"No game {slug}")
-        return Game(**data["game"])
+        return parse(Game, data["game"])
 
     # Saved games
 
@@ -422,8 +428,8 @@ class _Operations:
                 result = data["batchGameStates"]
                 fetched = _now()
                 for item in result["items"]:
-                    model = STATE_MODELS.get(item["gameSlug"], GameState)
-                    states.append(model(**item, fetched_at=fetched))
+                    slug = item.get("gameSlug") if isinstance(item, dict) else None
+                    states.append(parse(STATE_MODELS.get(slug, GameState), item, fetched_at=fetched))
                 pending = result.get("unprocessedKeys") or []
                 if not pending:
                     break

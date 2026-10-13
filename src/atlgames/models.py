@@ -13,21 +13,65 @@ from functools import cached_property
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import TypeVar
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import ValidationError
 
 from atlgames import bracket_city
 from atlgames import stacks
+from atlgames.exceptions import AtlanticGamesParseError
 
 EASTERN = ZoneInfo("America/New_York")
 
 
 class AtlanticModel(BaseModel):
-    """Base model. Extra fields are allowed and passed through."""
-    model_config = ConfigDict(extra="allow", ignored_types=(cached_property,))
+    """Base model. Extra fields are allowed and passed through.
+
+    Validation errors never include the response's values, which can be your
+    saved games.
+    """
+    model_config = ConfigDict(extra="allow", ignored_types=(cached_property,), hide_input_in_errors=True)
+
+
+Model = TypeVar("Model", bound=BaseModel)
+
+
+def describe_errors(error: ValidationError, limit: int = 3) -> str:
+    """Return where and how validation failed, as field paths and error
+    types (such as `puzzleDate: missing`), never the values themselves."""
+    problems = [f"{'.'.join(str(part) for part in e['loc']) or 'top level'}: {e['type']}"
+                for e in error.errors(include_url=False, include_input=False, include_context=False)]
+    more = f" and {len(problems) - limit} more" if len(problems) > limit else ""
+    return "; ".join(problems[:limit]) + more
+
+
+def parse(model: type[Model], data: Any, **fields: Any) -> Model:
+    """Return a response's `data` as a `model`, plus any extra `fields`.
+
+    Raises AtlanticGamesParseError, naming the model and the fields that
+    didn't match but none of the response's values, if `data` isn't a JSON
+    object or doesn't fit the model.
+    """
+    if not isinstance(data, dict):
+        raise AtlanticGamesParseError(f"The response for {model.__name__} wasn't a JSON object "
+                                      f"(got {type(data).__name__})")
+    try:
+        return model.model_validate({**data, **fields})
+    except ValidationError as error:
+        raise AtlanticGamesParseError(f"The response didn't match {model.__name__}: "
+                                      f"{describe_errors(error)}") from None
+
+
+def parse_list(model: type[Model], data: Any) -> list[Model]:
+    """Return a JSON list as a list of `model`s (see `parse`)."""
+    if not isinstance(data, list):
+        raise AtlanticGamesParseError(f"The response for a list of {model.__name__} wasn't a JSON list "
+                                      f"(got {type(data).__name__})")
+    return [parse(model, item) for item in data]
 
 
 def _eastern_date(when: datetime.datetime | None) -> str | None:
