@@ -22,6 +22,8 @@ The crosswords are hosted by [Amuse Labs](https://amuselabs.com)' PuzzleMe,
 which does a great job of putting puzzles in front of more people on more
 sites. Thanks to them.
 
+![atlg showing a Bracket City puzzle, a solved Crossword and a solved Stacks puzzle](https://raw.githubusercontent.com/lukwam/atlantic-games/main/docs/screenshot.svg)
+
 ## Installation
 
 ```bash
