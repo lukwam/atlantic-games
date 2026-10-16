@@ -74,6 +74,7 @@ tests/
     fixtures/        Trimmed captures of real responses; saved games and tokens are made up
 examples/            Small scripts built on the package, and an example API with a Dockerfile
 docs/                endpoints.md: the endpoints, limits and quirks behind each game
+                     README screenshot, regenerated with docs/make_screenshot.py
 ```
 
 Fixtures used by one test file live in that file; once a second file needs
