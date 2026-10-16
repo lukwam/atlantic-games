@@ -4,6 +4,13 @@ All notable changes to this project. The project follows
 [Semantic Versioning](https://semver.org/); while it's below 1.0, minor
 versions may include breaking changes.
 
+## 0.4.6 (2026-10-15)
+
+### Changed
+
+- The README shows a screenshot of `atlg`, regenerated with
+  `docs/make_screenshot.py`. (#32)
+
 ## 0.4.5 (2026-10-12)
 
 ### Fixed
